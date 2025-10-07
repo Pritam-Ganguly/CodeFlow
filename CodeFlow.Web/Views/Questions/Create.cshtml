@@ -1,0 +1,40 @@
+﻿@model CodeFlow.core.Models.Question
+@{
+    ViewData["Title"] = "Ask a Question";
+}
+
+<div class="container mt-4">
+    <h1>Ask a question</h1>
+    <form asp-action="Create">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <div class="form-group mb-3">
+            <label asp-for="Title" class="control-lable"></label>
+            <input asp-for="Title" class="form-control" placeholder="e.g., Why is the sky blue?"/>
+            <span asp-validation-for="Title" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mb-3">
+            <label asp-for="Body" class="control-lable"></label>
+            <textarea asp-for="Body" class="form-control" rows="10" placeholder="Describe your problem in detail..."></textarea>
+            <span asp-validation-for="Body" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="tagsInput" class="control-label">Tags</label>
+            <input type="text" name="tagsInput" class="form-control" placeholder="e.g., c#, aspnet-core, docker"/>
+            <small class="form-text text-muted">Add up to 5 tags separated by commas.</small>
+        </div>
+
+        <div class="form-group">
+            <input type="submit" value="Ask Question" class="btn btn-primary"/>
+            <a asp-controller="Home" asp-action="index" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

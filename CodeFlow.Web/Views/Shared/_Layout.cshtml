@@ -1,0 +1,209 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - CodeFlow.Web</title>
+    <script type="importmap"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/CodeFlow.Web.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+</head>
+<body class="bg-light">
+    <header class="so-header">
+        <nav class="navbar navbar-expand-lg so-navbar" x-data="{ isOpen: false }">
+            <div class="container-fluid so-container">
+                <a class="navbar-brand so-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    <i class="fab fa-stack-overflow me-1"></i>CodeFlow
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav">
+                        @if (User.Identity!.IsAuthenticated)
+                        {
+                            <li class="nav-item">
+                                <div class="d-flex align-items-center">
+                                    <div class="so-user-avatar">
+                                        @User.Identity.Name!.Substring(0, 1).ToUpper()
+                                    </div>
+                                    <span class="so-user-name">@User.Identity.Name</span>
+                                </div>
+                            </li>
+                            <li class="nav-item">
+                                <form asp-controller="Account" asp-action="Logout" method="post" class="form-inline">
+                                    <button type="submit" class="nav-link btn btn-link text-dark">Logout</button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="so-login-btn" asp-controller="Account" asp-action="Register">Register</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="so-signup-btn" asp-controller="Account" asp-action="Login">Login</a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="so-container">
+        <aside class="so-sidebar">
+            <ul class="so-sidebar-nav">
+                <li class="so-sidebar-item active">Home</li>
+                <li class="so-sidebar-title">PUBLIC</li>
+                <li class="so-sidebar-item">
+                    <i class="fas fa-globe-americas me-1"></i> Questions
+                </li>
+                <li class="so-sidebar-item">Tags</li>
+                <li class="so-sidebar-item">Users</li>
+                <li class="so-sidebar-item">Companies</li>
+                <li class="so-sidebar-title">COLLECTIVES</li>
+                <li class="so-sidebar-item">
+                    <i class="fas fa-star me-1"></i> Explore Collectives
+                </li>
+                <li class="so-sidebar-title">TEAMS</li>
+                <li class="so-sidebar-item">
+                    <i class="fas fa-users me-1"></i> Create free Team
+                </li>
+            </ul>
+        </aside>
+        <main role="main" class="so-main-content">
+            @RenderBody()
+        </main>
+        <aside class="so-right-sidebar">
+            <div class="so-widget so-card">
+                <div class="so-card-header">The Overflow Blog</div>
+                <div class="so-card-body">
+                    <div class="mb-3">
+                        <div class="fw-bold">How API governance fosters collaboration</div>
+                        <div class="text-muted small">Mar 15, 2025</div>
+                    </div>
+                    <div>
+                        <div class="fw-bold">The complete guide to protecting your APIs with OAuth</div>
+                        <div class="text-muted small">Mar 10, 2025</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="so-widget so-card">
+                <div class="so-card-header">Featured on Meta</div>
+                <div class="so-card-body">
+                    <div class="mb-2">
+                        <i class="fas fa-comment-alt me-1 text-primary"></i>
+                        <span>Preventing unauthorized automated access to the network</span>
+                    </div>
+                    <div class="mb-2">
+                        <i class="fas fa-shield-alt me-1 text-primary"></i>
+                        <span>Updates to the upcoming Community Asks Sprint</span>
+                    </div>
+                    <div>
+                        <i class="fas fa-tag me-1 text-primary"></i>
+                        <span>2025 Community Moderator Election Results</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="so-widget">
+                <div class="so-widget-title">Custom Filters</div>
+                <div class="so-card">
+                    <div class="so-card-body">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="unanswered">
+                            <label class="form-check-label small" for="unanswered">Unanswered</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="nobounty">
+                            <label class="form-check-label small" for="nobounty">No accepted answer</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="so-widget">
+                <div class="so-widget-title">Hot Network Questions</div>
+                <div class="so-card">
+                    <div class="so-card-body">
+                        <div class="mb-2">
+                            <a href="#" class="small">Why does my C# application consume so much memory?</a>
+                        </div>
+                        <div class="mb-2">
+                            <a href="#" class="small">How to properly handle exceptions in async methods?</a>
+                        </div>
+                        <div class="mb-2">
+                            <a href="#" class="small">Best practices for database migrations in production?</a>
+                        </div>
+                        <div class="mb-2">
+                            <a href="#" class="small">What's the difference between .NET Core and .NET 5+?</a>
+                        </div>
+                        <div class="mb-2">
+                            <a href="#" class="small">How to implement caching in a distributed system?</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <footer class="so-footer">
+        <div class="so-footer-container">
+            <div class="so-footer-logo">
+                <i class="fab fa-stack-overflow fa-2x"></i>
+            </div>
+            <div class="so-footer-nav">
+                <div class="so-footer-column">
+                    <div class="so-footer-title">CodeFlow</div>
+                    <a href="#" class="so-footer-link">Questions</a>
+                    <a href="#" class="so-footer-link">Help</a>
+                </div>
+                <div class="so-footer-column">
+                    <div class="so-footer-title">Products</div>
+                    <a href="#" class="so-footer-link">Teams</a>
+                    <a href="#" class="so-footer-link">Advertising</a>
+                    <a href="#" class="so-footer-link">Collectives</a>
+                    <a href="#" class="so-footer-link">Talent</a>
+                </div>
+                <div class="so-footer-column">
+                    <div class="so-footer-title">Company</div>
+                    <a href="#" class="so-footer-link">About</a>
+                    <a href="#" class="so-footer-link">Press</a>
+                    <a href="#" class="so-footer-link">Work Here</a>
+                    <a href="#" class="so-footer-link">Legal</a>
+                    <a href="#" class="so-footer-link">Privacy Policy</a>
+                    <a href="#" class="so-footer-link">Terms of Service</a>
+                </div>
+                <div class="so-footer-column">
+                    <div class="so-footer-title">Stack Exchange Network</div>
+                    <a href="#" class="so-footer-link">Technology</a>
+                    <a href="#" class="so-footer-link">Culture & recreation</a>
+                    <a href="#" class="so-footer-link">Life & arts</a>
+                    <a href="#" class="so-footer-link">Science</a>
+                    <a href="#" class="so-footer-link">Professional</a>
+                    <a href="#" class="so-footer-link">Business</a>
+                </div>
+            </div>
+            <div class="so-footer-copyright">
+                &copy; 2025 CodeFlow. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

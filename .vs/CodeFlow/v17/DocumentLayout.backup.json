@@ -1,0 +1,75 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\1_Projects\\CodeFlow\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{20D59247-D2A5-4EA3-A50B-96AAD6599988}|CodeFlow.Web\\CodeFlow.Web.csproj|c:\\1_projects\\codeflow\\codeflow.web\\views\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{20D59247-D2A5-4EA3-A50B-96AAD6599988}|CodeFlow.Web\\CodeFlow.Web.csproj|solutionrelative:codeflow.web\\views\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{20D59247-D2A5-4EA3-A50B-96AAD6599988}|CodeFlow.Web\\CodeFlow.Web.csproj|c:\\1_projects\\codeflow\\codeflow.web\\views\\home\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{20D59247-D2A5-4EA3-A50B-96AAD6599988}|CodeFlow.Web\\CodeFlow.Web.csproj|solutionrelative:codeflow.web\\views\\home\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{20D59247-D2A5-4EA3-A50B-96AAD6599988}|CodeFlow.Web\\CodeFlow.Web.csproj|c:\\1_projects\\codeflow\\codeflow.web\\wwwroot\\css\\site.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
+      "RelativeMoniker": "D:0:0:{20D59247-D2A5-4EA3-A50B-96AAD6599988}|CodeFlow.Web\\CodeFlow.Web.csproj|solutionrelative:codeflow.web\\wwwroot\\css\\site.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 3,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "C:\\1_Projects\\CodeFlow\\CodeFlow.Web\\Views\\Home\\Index.cshtml",
+              "RelativeDocumentMoniker": "CodeFlow.Web\\Views\\Home\\Index.cshtml",
+              "ToolTip": "C:\\1_Projects\\CodeFlow\\CodeFlow.Web\\Views\\Home\\Index.cshtml",
+              "RelativeToolTip": "CodeFlow.Web\\Views\\Home\\Index.cshtml",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAABcAAAANAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-10-07T17:51:07.734Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "site.css",
+              "DocumentMoniker": "C:\\1_Projects\\CodeFlow\\CodeFlow.Web\\wwwroot\\css\\site.css",
+              "RelativeDocumentMoniker": "CodeFlow.Web\\wwwroot\\css\\site.css",
+              "ToolTip": "C:\\1_Projects\\CodeFlow\\CodeFlow.Web\\wwwroot\\css\\site.css",
+              "RelativeToolTip": "CodeFlow.Web\\wwwroot\\css\\site.css",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAAAB4AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
+              "WhenOpened": "2025-10-07T17:23:04.559Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "_Layout.cshtml",
+              "DocumentMoniker": "C:\\1_Projects\\CodeFlow\\CodeFlow.Web\\Views\\Shared\\_Layout.cshtml",
+              "RelativeDocumentMoniker": "CodeFlow.Web\\Views\\Shared\\_Layout.cshtml",
+              "ToolTip": "C:\\1_Projects\\CodeFlow\\CodeFlow.Web\\Views\\Shared\\_Layout.cshtml",
+              "RelativeToolTip": "CodeFlow.Web\\Views\\Shared\\_Layout.cshtml",
+              "ViewState": "AgIAAKcAAAAAAAAAAAAIwMAAAABCAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-10-07T17:10:28.247Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

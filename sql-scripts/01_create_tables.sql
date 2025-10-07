@@ -1,0 +1,73 @@
+CREATE TABLE Users(
+    Id SERIAL PRIMARY KEY,
+    DisplayName VARCHAR(100) NOT NULL,
+    Email VARCHAR(255) UNIQUE NOT NULL,
+    PasswordHash TEXT NOT NULL,
+    CreatedAt TIMESTAMP NOT NULL DEFAULT (NOW() AT TIME ZONE 'utc'),
+    Reputation INTEGER NOT NULL DEFAULT 1
+);
+
+CREATE TABLE Roles(
+    Id SERIAL PRIMARY KEY,
+    Name VARCHAR(50) UNIQUE NOT NULL
+);
+
+CREATE TABLE Questions(
+    Id SERIAL PRIMARY KEY,
+    Title VARCHAR(500) NOT NULL,
+    Body TEXT NOT NULL,
+    ViewCount INTEGER NOT NULL DEFAULT 0,
+    Score INTEGER NOT NULL DEFAULT 0,
+    CreatedAt TIMESTAMP NOT NULL DEFAULT (NOW() AT TIME ZONE 'utc'),
+    UpdateAt TIMESTAMP NULL,
+    UserId INTEGER NOT NULL REFERENCES Users(Id) ON DELETE CASCADE
+);
+
+CREATE TABLE Tags(
+    Id SERIAL PRIMARY KEY,
+    NAME VARCHAR(50) UNIQUE NOT NULL,
+    Description TEXT NULL
+);
+
+CREATE TABLE QuestionTags (
+    QuestionId INTEGER NOT NULL REFERENCES Questions(Id) ON DELETE CASCADE,
+    TagId INTEGER NOT NULL REFERENCES Tags(Id) ON DELETE CASCADE,
+    CreatedAt TIMESTAMP NOT NULL DEFAULT (NOW() AT TIME ZONE 'utc'),
+    PRIMARY KEY (QuestionId, TagId)
+);
+
+CREATE TABLE Answers (
+    Id SERIAL PRIMARY KEY,
+    Body TEXT NOT NULL,
+    IsAccepted BOOLEAN NOT NULL DEFAULT FALSE,
+    Score INTEGER NOT NULL DEFAULT 0,
+    CreatedAt TIMESTAMP NOT NULL DEFAULT (NOW() AT TIME ZONE 'utc'),
+    UpdateAt TIMESTAMP NULL,
+    QuestionId INTEGER NOT NULL REFERENCES Questions(Id) ON DELETE CASCADE,
+    UserId INTEGER NOT NULL REFERENCES Users(Id) ON DELETE CASCADE
+);
+
+CREATE TABLE Votes (
+    Id SERIAL PRIMARY KEY,
+    VoteType INTEGER NOT NULL,
+    UserId INTEGER NOT NULL REFERENCES Users(Id) ON DELETE CASCADE,
+    QuestionId INTEGER REFERENCES Questions(Id) ON DELETE CASCADE,
+    AnswerId INTEGER REFERENCES Answers(Id) ON DELETE CASCADE,
+    CreatedAt TIMESTAMP NOT NULL DEFAULT (NOW() AT TIME ZONE 'utc'),
+    CONSTRAINT CHK_Vote_Target CHECK (
+        (QuestionId IS NOT NULL AND AnswerId IS NULL) OR
+        (QuestionId IS NULL AND AnswerId IS NOT NULL)
+    ),
+    CONSTRAINT UQ_User_Question UNIQUE (UserId, QuestionId),
+    CONSTRAINT UQ_User_Answer UNIQUE (UserId, AnswerId)
+);
+
+CREATE INDEX IX_Questions_UserId ON Questions(UserId);
+CREATE INDEX IX_Answers_QuestionId ON Answers(QuestionId);
+CREATE INDEX IX_Answers_UserId ON Answers(UserId);
+CREATE INDEX IX_Questions_CreatedAt ON Questions(CreatedAt);
+CREATE INDEX IX_Votes_QuestionId ON Votes(QuestionId);
+CREATE INDEX IX_Votes_AnswerId ON Votes(AnswerId);
+CREATE INDEX IX_Votes_UserId ON Votes(UserId);
+CREATE INDEX IX_QuestionTags_TagId ON QuestionTags(TagId);
+CREATE INDEX IX_QuestionTags_QuestionId ON QuestionTags(QuestionId);

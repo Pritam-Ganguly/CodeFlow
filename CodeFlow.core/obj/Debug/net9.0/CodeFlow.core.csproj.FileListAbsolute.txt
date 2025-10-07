@@ -1,0 +1,12 @@
+C:\1_Projects\CodeFlow\CodeFlow.core\bin\Debug\net9.0\CodeFlow.core.deps.json
+C:\1_Projects\CodeFlow\CodeFlow.core\bin\Debug\net9.0\CodeFlow.core.dll
+C:\1_Projects\CodeFlow\CodeFlow.core\bin\Debug\net9.0\CodeFlow.core.pdb
+C:\1_Projects\CodeFlow\CodeFlow.core\obj\Debug\net9.0\CodeFlow.core.csproj.AssemblyReference.cache
+C:\1_Projects\CodeFlow\CodeFlow.core\obj\Debug\net9.0\CodeFlow.core.GeneratedMSBuildEditorConfig.editorconfig
+C:\1_Projects\CodeFlow\CodeFlow.core\obj\Debug\net9.0\CodeFlow.core.AssemblyInfoInputs.cache
+C:\1_Projects\CodeFlow\CodeFlow.core\obj\Debug\net9.0\CodeFlow.core.AssemblyInfo.cs
+C:\1_Projects\CodeFlow\CodeFlow.core\obj\Debug\net9.0\CodeFlow.core.csproj.CoreCompileInputs.cache
+C:\1_Projects\CodeFlow\CodeFlow.core\obj\Debug\net9.0\CodeFlow.core.dll
+C:\1_Projects\CodeFlow\CodeFlow.core\obj\Debug\net9.0\refint\CodeFlow.core.dll
+C:\1_Projects\CodeFlow\CodeFlow.core\obj\Debug\net9.0\CodeFlow.core.pdb
+C:\1_Projects\CodeFlow\CodeFlow.core\obj\Debug\net9.0\ref\CodeFlow.core.dll

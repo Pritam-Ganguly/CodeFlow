@@ -1,0 +1,73 @@
+﻿@model IEnumerable<CodeFlow.core.Models.Question>
+
+@{
+    ViewData["Title"] = "Home Page";
+    var searchQuery = ViewData["SearchQuery"] as string ?? string.Empty;
+}
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <form asp-action="Index" asp-controller="Home" method="get">
+                <div class="input-group">
+                    <input type="text" name="search" class="form-control" placeholder="Search questions..." value="@searchQuery" />
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            @if (string.IsNullOrEmpty(searchQuery))
+            {
+                @:All Questions
+            }
+            else
+            {
+                @:Search Results for "@searchQuery"
+            }
+        </h1>
+        @if (!User.Identity!.IsAuthenticated)
+        {
+            <a class="btn btn-primary" asp-controller="Account" asp-action="Login">Ask Question</a>
+        }
+        else
+        {
+
+            <a class="btn btn-primary" asp-controller="Questions" asp-action="Create">Ask Question</a>
+        }
+    </div>
+
+    @if(!string.IsNullOrEmpty(searchQuery) && !Model.Any())
+    {
+        <div class="alert alert-info">
+            No questions found matching your search criteria.
+        </div>
+    }
+
+    <div class="list-group">
+        @foreach(var question in Model)
+        {
+            <div class="list-group-item list-group-item-action">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">
+                        <a asp-controller="Questions" asp-action="details" asp-route-id="@question.Id" class="text-decoration-none">
+                            @question.Title
+                        </a>
+                    </h5>
+                    <small class="text-muted">@question.Score votes</small>
+                </div>
+                <p class="mb-1">@(question.Body.Length > 150 ? question.Body.Substring(0,150) + "...": question.Body)</p>
+                <div class="mt-2">
+                    @foreach(var tag in question.Tags)
+                    {
+                        <span class="badge bg-secondary me-1">@tag.Name</span>
+                    }
+                </div>
+                <small class="text-muted">
+                    Asked by <strong>@question.User?.DisplayName</strong> on @question.CreatedAt.ToString("MM dd, yyyy")
+                </small>
+            </div>
+        }
+    </div>
+</div>
