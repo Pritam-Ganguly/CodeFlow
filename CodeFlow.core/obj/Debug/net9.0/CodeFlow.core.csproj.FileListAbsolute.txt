@@ -10,3 +10,4 @@ C:\1_Projects\CodeFlow\CodeFlow.core\obj\Debug\net9.0\CodeFlow.core.dll
 C:\1_Projects\CodeFlow\CodeFlow.core\obj\Debug\net9.0\refint\CodeFlow.core.dll
 C:\1_Projects\CodeFlow\CodeFlow.core\obj\Debug\net9.0\CodeFlow.core.pdb
 C:\1_Projects\CodeFlow\CodeFlow.core\obj\Debug\net9.0\ref\CodeFlow.core.dll
+C:\1_Projects\CodeFlow\CodeFlow.Core\obj\Debug\net9.0\CodeFlow.core.sourcelink.json

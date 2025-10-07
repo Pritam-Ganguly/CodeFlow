@@ -157,8 +157,8 @@ C:\1_Projects\CodeFlow\CodeFlow.Web\bin\Debug\net9.0\Microsoft.Extensions.Depend
 C:\1_Projects\CodeFlow\CodeFlow.Web\bin\Debug\net9.0\Microsoft.Extensions.Identity.Core.dll
 C:\1_Projects\CodeFlow\CodeFlow.Web\bin\Debug\net9.0\Microsoft.Extensions.Identity.Stores.dll
 C:\1_Projects\CodeFlow\CodeFlow.Web\bin\Debug\net9.0\Microsoft.Extensions.Logging.dll
-C:\1_Projects\CodeFlow\CodeFlow.Web\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt
 C:\1_Projects\CodeFlow\CodeFlow.Web\bin\Debug\net9.0\appsettings.Production.json
 C:\1_Projects\CodeFlow\CodeFlow.Web\obj\Debug\net9.0\compressed\ip4994mr5j-y7qtqb7m33.gz
 C:\1_Projects\CodeFlow\CodeFlow.Web\obj\Debug\net9.0\compressed\4yclkij04h-evtxl8ohto.gz
-C:\1_Projects\CodeFlow\CodeFlow.Web\obj\Debug\net9.0\compressed\r9846s72bd-mq9ylxvx4g.gz
+C:\1_Projects\CodeFlow\CodeFlow.Web\obj\Debug\net9.0\CodeFlow.Web.sourcelink.json
+C:\1_Projects\CodeFlow\CodeFlow.Web\obj\Debug\net9.0\compressed\r9846s72bd-qiq5o4ej6u.gz
