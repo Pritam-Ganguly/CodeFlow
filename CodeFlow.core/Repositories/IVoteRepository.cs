@@ -9,8 +9,10 @@ namespace CodeFlow.core.Repositories
 {
     public interface IVoteRepository
     {
-        Task<bool> AddVoteAsync(Vote vote);
-        Task<int> GetScoreForQuestionAsync(int questionId);
-        Task<int> GetScoreForAnswerAsync(int answerId);
+        Task<bool> AddQuestionVoteAsync(Vote vote);
+        Task<bool> AddAnswerVoteAsync(Vote vote);
+        Task<int> UpdateScoreForQuestionAsync(int questionId);
+        Task<int> UpdateScoreForAnswerAsync(int answerId);
+
     }
 }

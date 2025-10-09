@@ -20,12 +20,12 @@ if (string.IsNullOrEmpty(connectionString))
 builder.Services.AddScoped<IDbConnectionFactory>(_ => new NpgsqlConnectionFactory(builder.Configuration));
 builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
 {
-    options.Password.RequireDigit = true;
-    options.Password.RequiredLength = 8;
-    options.Password.RequireNonAlphanumeric = true;
-    options.Password.RequireUppercase = true;
-    options.Password.RequireLowercase = true;
-    options.User.RequireUniqueEmail = true;
+    options.Password.RequireDigit = false;
+    options.Password.RequiredLength = 6;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequireLowercase = false;
+    options.User.RequireUniqueEmail = false;
     options.SignIn.RequireConfirmedEmail = false;
 })
     .AddUserStore<DapperUserStore>()

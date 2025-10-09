@@ -7,7 +7,7 @@ CodeFlow - A stack overflow clone.
 
 ### Core Feature Enhancements
 - [ ] **Voting System Completion**
-  - [ ] Extend voting to answers
+  - [x] Extend voting to answers
   - [ ] Implement vote scoring logic for answers
   - [ ] Add visual feedback for voted posts
   - [ ] Prevent self-voting

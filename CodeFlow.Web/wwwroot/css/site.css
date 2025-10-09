@@ -436,3 +436,29 @@ body {
     margin: 0 8px;
   }
 }
+
+
+/*Details styles*/
+
+.so-question-card{
+
+}
+
+.so-question-title {
+    font-size: 30px;
+    padding: 0px;
+    color: var(--so-dark-blue);
+}
+
+.so-question-body {
+}
+
+.so-question-badge {
+    background-color: var(--so-dark-gray);
+}
+
+.so-question-postdate {
+    padding: 5px 0px 20px 2px;
+    font-size: 12px;
+    color: var(--so-dark-gray);
+}

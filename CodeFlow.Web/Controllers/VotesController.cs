@@ -38,13 +38,13 @@ namespace CodeFlow.Web.Controllers
                 Questionid = questionId,
             };
 
-            var success = await _voteRepository.AddVoteAsync(vote);
+            var success = await _voteRepository.AddQuestionVoteAsync(vote);
             if (!success)
             {
                 return BadRequest("Could not process vote.");
             }
 
-            var newScore = await _voteRepository.GetScoreForQuestionAsync(questionId);
+            var newScore = await _voteRepository.UpdateScoreForQuestionAsync(questionId);
             return Ok( new {newScore});
         }
 
@@ -68,14 +68,13 @@ namespace CodeFlow.Web.Controllers
                 UserId = user.Id,
                 AnswerId = answerId,
             };
-
-            var success = await _voteRepository.AddVoteAsync(vote);
+            var success = await _voteRepository.AddAnswerVoteAsync(vote);
             if (!success)
             {
                 return BadRequest("Could not process vote.");
             }
 
-            var newScore = await _voteRepository.GetScoreForAnswerAsync(answerId);
+            var newScore = await _voteRepository.UpdateScoreForAnswerAsync(answerId);
             return Ok(new { newScore });
         }
     }
