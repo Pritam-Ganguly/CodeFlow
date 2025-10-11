@@ -6,11 +6,11 @@ CodeFlow - A stack overflow clone.
 # Roadmap
 
 ### Core Feature Enhancements
-- [ ] **Voting System Completion**
+- ✅ **Voting System Completion**
   - ✅ Extend voting to answers
-  - [ ] Implement vote scoring logic for answers
-  - [ ] Add visual feedback for voted posts
-  - [ ] Prevent self-voting
+  - ✅ Implement vote scoring logic for answers
+  - ✅ Add visual feedback for voted posts
+  - ✅ Prevent self-voting
 
 - [ ] **Answer Acceptance**
   - [ ] Add "Accept Answer" functionality for question owners
