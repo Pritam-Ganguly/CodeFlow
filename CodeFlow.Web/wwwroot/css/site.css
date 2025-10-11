@@ -457,7 +457,7 @@ body {
     background-color: var(--so-dark-gray);
 }
 
-.so-question-postdate {
+.so-postdate {
     padding: 5px 0px 20px 2px;
     font-size: 12px;
     color: var(--so-dark-gray);

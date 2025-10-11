@@ -1,4 +1,6 @@
 .vs/
-**/bin/
-**/obj/
+CodeFlow.core/bin/
+CodeFlow.core/obj/
+CodeFlow.Web/bin/
+CodeFlow.Web/obj/
 .env.example

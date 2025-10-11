@@ -1,8 +1,11 @@
 ﻿using CodeFlow.core.Models;
 using CodeFlow.core.Repositories;
+using CodeFlow.Web.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.VisualBasic;
+using System.Globalization;
 
 namespace CodeFlow.Web.Controllers
 {
@@ -30,8 +33,24 @@ namespace CodeFlow.Web.Controllers
             }
 
             var answers = await _answerRepository.GetByQuestionIdAsync(id);
+            var updatedAnswers = await Task.WhenAll(answers.Select(async (answer) =>
+            {
+                return new AnswerViewModel(answer)
+                {
+                    IsAuthor = IsAuthor(answer.UserId),
+                    CurrentVote = await CurrentVoteForAnswers(answer.Id)
+                };
+            }));
 
-            var viewModel = (Question: question, Answers: answers);
+            var viewModel = new DetailsViewModel()
+            {
+                Question = new QuestionViewModel(question)
+                {
+                    IsAuthor = IsAuthor(question.UserId),
+                    CurrentVote = await CurrentUserVote(question.Id)
+                },
+                Answers = updatedAnswers
+            };
             return View(viewModel);
         }
 
@@ -59,24 +78,24 @@ namespace CodeFlow.Web.Controllers
                 if (!string.IsNullOrWhiteSpace(tagsInput))
                 {
                     var tagNames = tagsInput.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(t => t.Trim().ToLower()).Distinct();
-                    var tagIds = new List<int>();
 
-                    foreach (var tagName in tagNames)
+                    var tagIds = await Task.WhenAll(tagNames.Select(async tagName =>
                     {
                         var existingTag = await _tagRepository.GetByNameAsync(tagName);
                         if (existingTag != null)
                         {
-                            tagIds.Add(existingTag.Id);
+                            return existingTag.Id;
                         }
                         else
                         {
                             var newTag = new Tag { Name = tagName };
                             newTag = await _tagRepository.CreateAsync(newTag);
-                            tagIds.Add(newTag.Id);
+                            return newTag.Id;
                         }
-                    }
+                    }));
+                    
 
-                    if (tagIds.Count != 0)
+                    if (tagIds.Length != 0)
                     {
                         await _tagRepository.AddTagsToQuestionAsync(newQuestionId, tagIds);
                     }
@@ -124,10 +143,51 @@ namespace CodeFlow.Web.Controllers
             }
 
             var answers = await _answerRepository.GetByQuestionIdAsync(questionId);
-            var viewModel = (Question: question, Answers: answers);
+            var updatedAnswers = await Task.WhenAll(answers.Select(async (answer) =>
+            {
+                return new AnswerViewModel(answer)
+                {
+                    IsAuthor = IsAuthor(answer.UserId),
+                    CurrentVote = await CurrentVoteForAnswers(answer.Id)
+                };
+            }));
+
+            var viewModel = new DetailsViewModel()
+            {
+                Question = new QuestionViewModel(question)
+                {
+                    IsAuthor = IsAuthor(question.UserId),
+                    CurrentVote = await CurrentUserVote(question.Id)
+                },
+                Answers = updatedAnswers
+            };
             return View("Details", viewModel);
         }
+
+        private bool IsAuthor(int authorId) => authorId == GetCurrentUser();
+            
+        private async Task<int> CurrentUserVote(int questionId)
+        {
+            int userId = GetCurrentUser();
+            int? voteType = await _questionRepository.CurrentVoteAsync(userId, questionId);
+            return voteType ?? 0;
+        }
+
+        private async Task<int> CurrentVoteForAnswers(int answerId)
+        {
+            int userId = GetCurrentUser();
+            int? voteType = await _questionRepository.CurrentVoteForAnswerItemAsync(userId, answerId);
+            return voteType ?? 0;
+        }
+
+        private int GetCurrentUser()
+        {
+            bool isUserLoggedIn = int.TryParse(_userManager.GetUserId(User), out int userId);
+            if (!isUserLoggedIn)
+            {
+                userId = -1;
+            }
+            return userId;
+        }
     }
-
-
 }

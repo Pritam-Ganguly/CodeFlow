@@ -1,4 +1,4 @@
-﻿@model (CodeFlow.core.Models.Question Question, IEnumerable<CodeFlow.core.Models.Answer> Answers)
+﻿@model DetailsViewModel
 
 @{
     ViewData["Title"] = Model.Question.Title;
@@ -8,13 +8,13 @@
     <div class="so-question-card mb-4">
         <div class="so-question-body row">
             <div class="row">
-                <div class="col-14 so-question-title">@Model.Question.Title</div>
+                <div class="col-12 so-question-title">@Model.Question.Title</div>
             </div>
             <div class="row justify-content-start">
-                <div class="col-6 so-question-postdate">
+                <div class="col-6 so-postdate">
                     Asked on @Model.Question.CreatedAt.ToString("MMM dd, yyyy 'at' h:mm tt") by <strong>@Model.Question.User?.DisplayName</strong>
                 </div>
-                <div class="col-4 so-question-postdate">
+                <div class="col-4 so-postdate">
                     <span class="">Viewed: @Model.Question.ViewCount times</span>
                 </div>
             </div>
@@ -30,14 +30,14 @@
                         <i class="fas fa-caret-down fa-2x text-muted"></i>
                     </a>
                 }
-                else
+                else if (!Model.Question.IsAuthor)
                 {
-                    <a href="#" class="vote-link text-decoration-none" data-type="question" data-id="@Model.Question.Id" data-vote="1">
-                        <i class="fa-solid fa-caret-up fa-2x text-muted"></i>
+                    <a href="#" class="vote-link" data-type="question" data-id="@Model.Question.Id" data-vote="1">
+                        <i class="fa-solid fa-caret-up fa-2x" style="color:@(Model.Question.CurrentVote == 1 ? "grey" : "lightgrey")"></i>
                     </a>
                     <div class="score fs-5 fw-bold my-1 ps-1" id="question-score-@Model.Question.Id">@Model.Question.Score</div>
-                    <a href="#" class="vote-link text-decoration-none" data-type="question" data-id="@Model.Question.Id" data-vote="-1">
-                        <i class="fas fa-caret-down fa-2x text-muted"></i>
+                    <a href="#" class="vote-link" data-type="question" data-id="@Model.Question.Id" data-vote="-1">
+                        <i class="fas fa-caret-down fa-2x" style="color:@(Model.Question.CurrentVote == -1 ? "grey" : "lightgrey")"></i>
                     </a>
                 }
             </div>
@@ -46,8 +46,8 @@
                     @Model.Question.Body
                 </div>
             </div>
-            <div class="row row justify-content-start">
-                <div class="col-5 mt-2 mb-3">
+            <div class="row justify-content-start">
+                <div class="col-12 mt-2 mb-3">
                     @foreach (var tag in Model.Question.Tags)
                     {
                         <span class="so-question-badge badge bg-light text-dark">@tag.Name</span>
@@ -57,7 +57,7 @@
         </div>
     </div>
 
-    <h2>@Model.Answers.Count() Answers</h2>
+    <h2>@(Model.Answers.Count()) @(Model.Answers.Count() == 1 ? "Answer" : " Answers")</h2>
     <hr />
     @if (Model.Answers.Any())
     {
@@ -76,21 +76,21 @@
                                 <i class="fas fa-caret-down fa-2x text-muted"></i>
                             </a>
                         }
-                        else
+                        else if(!answer.IsAuthor)
                         {
                             <a href="#" class="vote-link text-decoration-none" data-type="answer" data-id="@answer.Id" data-vote="1">
-                                <i class="fa-solid fa-caret-up fa-2x text-muted"></i>
+                                <i class="fa-solid fa-caret-up fa-2x" style="color:@(answer.CurrentVote == 1 ? "grey" : "lightgrey")"></i>
                             </a>
                             <div class="score fs-5 fw-bold my-1 ps-1" id="answer-score-@answer.Id">@answer.Score</div>
                             <a href="#" class="vote-link text-decoration-none" data-type="answer" data-id="@answer.Id" data-vote="-1">
-                                <i class="fas fa-caret-down fa-2x text-muted"></i>
+                                <i class="fas fa-caret-down fa-2x" style="color:@(answer.CurrentVote == -1 ? "grey" : "lightgrey")"></i>
                             </a>
                         }
                     </div>
                     <div class="col-10 answer-body">
                         @answer.Body
                     </div>
-                    <div class="col-md-7 offset-md-5 text-muted mt-2 justify-content-end">
+                    <div class="col-md-7 offset-md-6 text-muted mt-2 justify-content-end so-postdate">
                         Answered by <strong>@answer.User?.DisplayName</strong> on @answer.CreatedAt.ToString("MMM dd, yyyy")
 
                         @if (answer.IsAccepted)
@@ -108,7 +108,7 @@
     }
 </div>
 <div class="mt-5">
-    <h3>Youre Answer</h3>
+    <h3>You're Answer</h3>
     <form asp-action="Answer" asp-route-id="@Model.Question.Id" method="post">
         @Html.AntiForgeryToken()
 
@@ -132,15 +132,22 @@
     @section Scripts {
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                        // Attach click event to all vote links
-                        document.querySelectorAll('.vote-link').forEach(link => {
+                        document.querySelectorAll('.vote-link').forEach((link, i) => {
                             link.addEventListener('click', async function (e) {
-                                e.preventDefault(); // Prevent the link from navigating
+                                e.preventDefault();
 
-                                const type = this.dataset.type; // 'question' or 'answer'
+                                const type = this.dataset.type;
                                 const id = parseInt(this.dataset.id);
-                                const vote = parseInt(this.dataset.vote); // 1 or -1
-                                console.log(`Voting ${vote} on ${type} with ID ${id}`);
+                                const vote = parseInt(this.dataset.vote);
+
+                                if(vote == 1){
+                                    document.querySelectorAll('.vote-link')[i].getElementsByTagName('i')[0].style.color = 'grey';
+                                    document.querySelectorAll('.vote-link')[i+1].getElementsByTagName('i')[0].style.color = 'lightgrey';
+                                }
+                                else {
+                                    document.querySelectorAll('.vote-link')[i].getElementsByTagName('i')[0].style.color = 'grey';
+                                    document.querySelectorAll('.vote-link')[i-1].getElementsByTagName('i')[0].style.color = 'lightgrey';
+                                }
 
                                 try {
                                     const response = await fetch(`/Votes/${type}?${type}Id=${id}&voteType=${vote}`, {

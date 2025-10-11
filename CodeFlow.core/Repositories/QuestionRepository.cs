@@ -167,5 +167,29 @@ namespace CodeFlow.core.Repositories
                 param: new { SearchQuery = searchQuery },
                 splitOn: "Id");
         }
+
+        public async Task<int?> CurrentVoteAsync(int userId, int quesitonId)
+        {
+            using var connection = await _connectionFactory.CreateConnectionAsync();
+            var sql = @"SELECT VoteType FROM Votes WHERE UserId = @UserId AND QuestionId = @QuestionId";
+            var existingVote = await connection.QueryFirstOrDefaultAsync<int?>(sql, new
+            {
+                UserId = userId,
+                QuestionId = quesitonId
+            });
+            return existingVote;
+        }
+
+        public async Task<int?> CurrentVoteForAnswerItemAsync(int userId, int answerId)
+        {
+            using var connection = await _connectionFactory.CreateConnectionAsync();
+            var sql = @"SELECT VoteType FROM Votes WHERE UserId = @UserId AND AnswerId = @AnswerId";
+            var existingVote = await connection.QueryFirstOrDefaultAsync<int?>(sql, new
+            {
+                UserId = userId,
+                AnswerId = answerId
+            });
+            return existingVote;
+        }
     }
 }
