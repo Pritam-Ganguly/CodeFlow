@@ -13,10 +13,10 @@ CodeFlow - A stack overflow clone.
   - ✅ Prevent self-voting
 
 - [ ] **Answer Acceptance**
-  - [ ] Add "Accept Answer" functionality for question owners
-  - [ ] Visual indicator for accepted answers
+  - ✅ Add "Accept Answer" functionality for question owners
+  - ✅ Visual indicator for accepted answers
   - [ ] Reputation reward for accepted answers
-  - [ ] Only one accepted answer per question
+  - ✅ Only one accepted answer per question
 
 - [ ] **Comment System**
   - [ ] Create `Comments` table with FK to Questions/Answers
