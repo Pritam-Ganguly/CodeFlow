@@ -11,5 +11,8 @@ namespace CodeFlow.core.Repositories
         Task<Answer?> GetByIdAsync(int id);
         Task<IEnumerable<Answer>> GetByQuestionIdAsync(int questionId);
         Task<int> CreateAsync(Answer answer);
+        Task<int> AcceptAnswer(int answerId);
+        Task<Question?> GetQuestionByAnserIdAync(int answerId);
+        Task<int?> EditAnswerAsync(int answerId, string body);
     }
 }

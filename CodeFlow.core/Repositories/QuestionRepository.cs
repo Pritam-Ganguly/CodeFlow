@@ -191,5 +191,20 @@ namespace CodeFlow.core.Repositories
             });
             return existingVote;
         }
+
+        public async Task<int> UpdateQuestionAsync(int questionId, string newTitle, string newBody)
+        {
+            Console.WriteLine("Trying to update...");
+            using var connection = await _connectionFactory.CreateConnectionAsync();
+            Question? question = await GetByIdWithTagsAsync(questionId);
+            var sql = @"UPDATE Questions SET Title = @Title, Body = @Body WHERE Questions.Id = @Id";
+
+            return await connection.ExecuteAsync(sql, new
+            {
+                Title = newTitle,
+                Body = newBody,
+                Id = questionId
+            });
+        }
     }
 }

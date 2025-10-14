@@ -2,7 +2,7 @@
 {
     public class DetailsViewModel
     {
-        public QuestionViewModel Question { get; set; }
+        public QuestionViewModel? Question { get; set; }
         public IEnumerable<AnswerViewModel> Answers { get; set; } = [];
 
     }

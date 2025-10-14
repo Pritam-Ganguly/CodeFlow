@@ -1,7 +1,7 @@
 ﻿@model DetailsViewModel
 
 @{
-    ViewData["Title"] = Model.Question.Title;
+    ViewData["Title"] = Model.Question!.Title;
 }
 
 <div class="container mt-4">
@@ -14,9 +14,14 @@
                 <div class="col-6 so-postdate">
                     Asked on @Model.Question.CreatedAt.ToString("MMM dd, yyyy 'at' h:mm tt") by <strong>@Model.Question.User?.DisplayName</strong>
                 </div>
-                <div class="col-4 so-postdate">
-                    <span class="">Viewed: @Model.Question.ViewCount times</span>
-                </div>
+                @if (Model.Question.IsAuthor)
+                {
+                    <div class="col-1 offset-5">
+                        <a class="text-decoration-none" asp-controller="Questions" asp-action="Edit" asp-route-id="@Model.Question.Id">
+                            <i class="fas fa-pen-to-square text-opacity-50" style="color: cadetblue"></i>
+                        </a>
+                    </div>
+                }
             </div>
             <hr />
             <div class="col-1">
@@ -61,7 +66,9 @@
     <hr />
     @if (Model.Answers.Any())
     {
-        foreach(var answer in Model.Answers)
+        var answers = Model.Answers;
+        answers = answers.OrderByDescending(a => a.IsAccepted).ThenByDescending(a => a.CreatedAt);
+        foreach (var answer in answers)
         {
             <div class="card mb-3">
                 <div class="card-body row">
@@ -81,15 +88,61 @@
                             <a href="#" class="vote-link text-decoration-none" data-type="answer" data-id="@answer.Id" data-vote="1">
                                 <i class="fa-solid fa-caret-up fa-2x" style="color:@(answer.CurrentVote == 1 ? "grey" : "lightgrey")"></i>
                             </a>
+                            @if (answer.IsAccepted)
+                            {
+                                <a href="#" class="text-decoration-none" data-type="answer" data-id="@answer.Id" data-vote="-1">
+                                    <i class="fas fa-check fa-2x" style="color: forestgreen"></i>
+                                </a>
+                            }
                             <div class="score fs-5 fw-bold my-1 ps-1" id="answer-score-@answer.Id">@answer.Score</div>
                             <a href="#" class="vote-link text-decoration-none" data-type="answer" data-id="@answer.Id" data-vote="-1">
                                 <i class="fas fa-caret-down fa-2x" style="color:@(answer.CurrentVote == -1 ? "grey" : "lightgrey")"></i>
                             </a>
+
+                            @if (!answer.IsAccepted && Model.Question.IsAuthor)
+                            {
+                                <form asp-controller="Questions"
+                                      asp-action="AcceptAnswer"
+                                      asp-route-answerId="@answer.Id"
+                                      method="post"
+                                      class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="so-accept-button text-decoration-none" title="Accept answer">
+                                        <i class="fas fa-check fa-2x" style="color: cadetblue"></i>
+                                    </button>
+                                </form>
+                            }
                         }
                     </div>
                     <div class="col-10 answer-body">
-                        @answer.Body
+                        <span id="answer-body-@answer.Id">@answer.Body</span>
+                        <form id="answer-form-@answer.Id" asp-controller="Questions" asp-action="EditAnswer" asp-route-Id ="@answer.Id" style="display:none">
+                            @Html.AntiForgeryToken()
+                            <div class="form-group mb-3">
+                                <textarea name="body" class="form-control" rows="6">@answer.Body</textarea>
+                                @if (ViewData.ModelState["body"]?.Errors.Count > 0)
+                                {
+                                    <span class="text-danger">@ViewData.ModelState["body"]?.Errors.First().ErrorMessage</span>
+                                }
+                                else if (ViewData.ModelState[string.Empty]?.Errors.Count > 0)
+                                {
+                                    <span class="text-danger">@ViewData.ModelState[string.Empty]?.Errors.First().ErrorMessage</span>
+                                }
+                            </div>
+                            <div class="form-group">
+                                <input class="btn btn-primary" type="submit" value="Update" />
+                                <button class="btn btn-secondary" onclick="handleClose(@answer.Id)">Cancel</button>
+                            </div>
+                        </form>
                     </div>
+                    @if(!answer.IsAccepted && answer.IsAuthor)
+                    {
+                        <div class="col-2">
+                            <a href="javascript:void(0);" class="text-decoration-none" onclick="handleOpen(@answer.Id)">
+                                <i class="fas fa-pen-to-square text-opacity-50" style="color: cadetblue"></i>
+                            </a>
+                        </div>
+                    }
                     <div class="col-md-7 offset-md-6 text-muted mt-2 justify-content-end so-postdate">
                         Answered by <strong>@answer.User?.DisplayName</strong> on @answer.CreatedAt.ToString("MMM dd, yyyy")
 
@@ -131,6 +184,16 @@
 
     @section Scripts {
         <script>
+            function handleOpen(id){
+                document.getElementById(`answer-body-${id}`).style.display = "none";
+                document.getElementById(`answer-form-${id}`).style.display = "block";
+            }
+
+            function handleClose(id){
+                document.getElementById(`answer-body-${id}`).style.display = "block";
+                document.getElementById(`answer-form-${id}`).style.display = "none";
+            }
+
             document.addEventListener('DOMContentLoaded', function () {
                         document.querySelectorAll('.vote-link').forEach((link, i) => {
                             link.addEventListener('click', async function (e) {

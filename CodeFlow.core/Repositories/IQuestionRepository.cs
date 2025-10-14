@@ -12,5 +12,6 @@ namespace CodeFlow.core.Repositories
         Task<IEnumerable<Question>> GetRecentWithTagsAsync(int limit = 20);
         Task<int?> CurrentVoteAsync(int userId, int quesitonId);
         Task<int?> CurrentVoteForAnswerItemAsync(int userId, int answerId);
+        Task<int> UpdateQuestionAsync(int questionId, string newTitle, string newBody);
     }
 }

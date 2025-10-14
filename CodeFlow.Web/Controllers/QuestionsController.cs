@@ -4,8 +4,6 @@ using CodeFlow.Web.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.VisualBasic;
-using System.Globalization;
 
 namespace CodeFlow.Web.Controllers
 {
@@ -133,6 +131,67 @@ namespace CodeFlow.Web.Controllers
             return RedirectToAction(nameof(Details), new { id = id });
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public async Task<IActionResult> EditAnswer(int id, string body)
+        {
+            if (string.IsNullOrWhiteSpace(body))
+            {
+                ModelState.AddModelError("", "Answer body cannot be empty");
+                return await RedisplayDetailsPage(id);
+            }
+
+            var answer = await _answerRepository.GetByIdAsync(id); 
+            if(answer == null)
+            {
+                return NotFound();
+            }
+
+            var result = await _answerRepository.EditAnswerAsync(id, body);
+            if(result == null)
+            {
+                return NotFound();
+            }
+
+            return RedirectToAction(nameof(Details), new { id = answer.QuestionId});
+        }
+
+        public async Task<ActionResult> Edit(int id)
+        {
+            var question = await _questionRepository.GetByIdAsync(id);
+            return View(question);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public async Task<IActionResult> Edit(Question question)
+        {
+            if (ModelState.IsValid) {
+                var result = await _questionRepository.UpdateQuestionAsync(question.Id, question.Title, question.Body);
+                return await RedisplayDetailsPage(question.Id);
+            }
+            return View(question);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public async Task<IActionResult> AcceptAnswer(int answerId)
+        {
+            var result = await _answerRepository.AcceptAnswer(answerId);
+            if(result == 0)
+            {
+                return NotFound();
+            }
+            var question = await _answerRepository.GetQuestionByAnserIdAync(answerId);
+            if (question == null)
+            {
+                return NotFound();
+            }
+            return RedirectToAction(nameof(Details), new { id = question.Id });
+        }
 
         private async Task<IActionResult> RedisplayDetailsPage(int questionId)
         {
