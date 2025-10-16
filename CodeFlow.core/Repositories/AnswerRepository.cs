@@ -56,7 +56,6 @@ namespace CodeFlow.core.Repositories
 
         }
 
-
         public async Task<Question?> GetQuestionByAnserIdAync(int answerId)
         {
             using var connection = await _connectionFactory.CreateConnectionAsync();

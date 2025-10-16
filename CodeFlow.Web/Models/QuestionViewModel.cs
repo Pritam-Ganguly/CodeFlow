@@ -16,6 +16,7 @@ namespace CodeFlow.Web.Models
         public List<Tag> Tags { get; set; } = new List<Tag>();
         public bool IsAuthor { get; set; }
         public int CurrentVote { get; set; } = 0;
+        public IEnumerable<Comment> Comments { get; set; } = [];
 
         public QuestionViewModel(Question question)
         {

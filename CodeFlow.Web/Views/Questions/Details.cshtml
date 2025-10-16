@@ -59,10 +59,42 @@
                     }
                 </div>
             </div>
+            <h6>
+                @Model.Question.Comments.Count() @(Model.Question.Comments.Count() > 1 ? "Comments" : "Comment")     
+                <span id="toggle-comments-arrow" class="so-toggle-arrow" style="cursor:pointer;">
+                    <i class="fa-solid fa-caret-down"></i>
+                </span>
+            </h6>
+            <div>
+                <form asp-controller="Questions" asp-action="CommentOnQuestion" asp-route-id="@Model.Question.Id" method="post" class="so-add-comment-form">
+                    @Html.AntiForgeryToken()
+
+                    <div class="form-group mb-1">
+                        <textarea name="body" class="form-control so-comment-textarea" rows="3" placeholder="Add a comment"></textarea>
+                        @if (ViewData.ModelState["body"]?.Errors.Count > 0)
+                        {
+                            <span class="text-danger so-comment-error">@ViewData.ModelState["body"]?.Errors.First().ErrorMessage</span>
+                        }
+                        else if (ViewData.ModelState[string.Empty]?.Errors.Count > 0)
+                        {
+                            <span class="text-danger so-comment-error">@ViewData.ModelState[string.Empty]?.Errors.First().ErrorMessage</span>
+                        }
+                    </div>
+                    <div class="form-group d-inline">
+                        <input class="btn btn-sm btn-outline-secondary so-comment-btn" type="submit" value="Add a Comment"/>
+                    </div>
+                </form>
+            </div>
+            <div id="comments-section" class="so-comments-container" style="display: block">
+                @foreach (var comment in Model.Question.Comments)
+                {
+                    @await Html.PartialAsync("_Comment", comment)
+                }
+            </div>
         </div>
     </div>
 
-    <h2>@(Model.Answers.Count()) @(Model.Answers.Count() == 1 ? "Answer" : " Answers")</h2>
+    <h5>@(Model.Answers.Count()) @(Model.Answers.Count() == 1 ? "Answer" : " Answers")</h5>
     <hr />
     @if (Model.Answers.Any())
     {
@@ -70,7 +102,7 @@
         answers = answers.OrderByDescending(a => a.IsAccepted).ThenByDescending(a => a.CreatedAt);
         foreach (var answer in answers)
         {
-            <div class="card mb-3">
+            <div class="card answers-section mb-3">
                 <div class="card-body row">
                     <div class="col-1">
                         @if (!User.Identity!.IsAuthenticated)
@@ -152,7 +184,43 @@
                         }
                     </div>
                 </div>
+                <div class="answer-comments-section p-2" answer-id="@answer.Id">
+
+                    <h6>
+                        @answer.Comments.Count() @(answer.Comments.Count() > 1 ? "Comments" : "Comment")
+                        <span id="toggle-arrow-@answer.Id" answer-class="so-toggle-arrow" style="cursor:pointer;">
+                            <i class="fa-solid fa-caret-down"></i>
+                        </span>
+                    </h6>
+                    <div>
+                        <form asp-controller="Questions" asp-action="CommentOnAnswer" asp-route-id="@answer.Id" method="post" class="so-add-comment-form">
+                            @Html.AntiForgeryToken()
+
+                            <div class="form-group mb-1">
+                                <textarea name="body" class="form-control so-comment-textarea" rows="2" placeholder="Add a comment"></textarea>
+                                @if (ViewData.ModelState["body"]?.Errors.Count > 0)
+                                {
+                                    <span class="text-danger so-comment-error">@ViewData.ModelState["body"]?.Errors.First().ErrorMessage</span>
+                                }
+                                else if (ViewData.ModelState[string.Empty]?.Errors.Count > 0)
+                                {
+                                    <span class="text-danger so-comment-error">@ViewData.ModelState[string.Empty]?.Errors.First().ErrorMessage</span>
+                                }
+                            </div>
+                            <div class="form-group d-inline">
+                                <input class="btn btn-sm btn-outline-secondary so-comment-btn" type="submit" value="Add a Comment" />
+                            </div>
+                        </form>
+                    </div>
+                    <div id="comments-section-answer-@answer.Id" class="so-comments-container" style="display: block">
+                        @foreach (var comment in answer.Comments)
+                        {
+                            @await Html.PartialAsync("_Comment", comment)
+                        }
+                    </div>
+                </div>
             </div>
+
         }        
     }
     else
@@ -161,7 +229,7 @@
     }
 </div>
 <div class="mt-5">
-    <h3>You're Answer</h3>
+    <h4>You're Answer</h4>
     <form asp-action="Answer" asp-route-id="@Model.Question.Id" method="post">
         @Html.AntiForgeryToken()
 
@@ -193,6 +261,39 @@
                 document.getElementById(`answer-body-${id}`).style.display = "block";
                 document.getElementById(`answer-form-${id}`).style.display = "none";
             }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                const questionArrow = document.getElementById('toggle-comments-arrow');
+                const questionCommentsSection = document.getElementById('comments-section');
+                let questionCommentsVisible = true;
+
+                if (questionArrow && questionCommentsSection) {
+                    questionArrow.addEventListener('click', function () {
+                        questionCommentsVisible = !questionCommentsVisible;
+                        questionCommentsSection.style.display = questionCommentsVisible ? 'block' : 'none';
+                        questionArrow.innerHTML = questionCommentsVisible
+                            ? '<i class="fa-solid fa-caret-down"></i>'
+                            : '<i class="fa-solid fa-caret-right"></i>';
+                    });
+                }
+
+                document.querySelectorAll(".answer-comments-section").forEach(section => {
+                    const id = section.getAttribute('answer-id');
+                    const arrow = document.getElementById(`toggle-arrow-${id}`);
+                    const commentsSection = document.getElementById(`comments-section-answer-${id}`);
+                    let commentsVisible = true;
+
+                    if (arrow && commentsSection) {
+                        arrow.addEventListener('click', function () {
+                            commentsVisible = !commentsVisible;
+                            commentsSection.style.display = commentsVisible ? 'block' : 'none';
+                            arrow.innerHTML = commentsVisible
+                                ? '<i class="fa-solid fa-caret-down"></i>'
+                                : '<i class="fa-solid fa-caret-right"></i>';
+                        });
+                    }
+                });
+            });
 
             document.addEventListener('DOMContentLoaded', function () {
                         document.querySelectorAll('.vote-link').forEach((link, i) => {
@@ -236,7 +337,4 @@
                     });
         </script>
     }
-
 </div>
-
-

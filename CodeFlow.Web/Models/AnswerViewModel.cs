@@ -16,6 +16,7 @@ namespace CodeFlow.Web.Models
         public User? User { get; set; }
         public bool IsAuthor { get; set; }
         public int CurrentVote { get; set; } = 0;
+        public IEnumerable<Comment> Comments { get; set; } = [];
 
         public AnswerViewModel(Answer answer)
         {

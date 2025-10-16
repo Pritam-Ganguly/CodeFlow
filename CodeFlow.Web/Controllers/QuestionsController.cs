@@ -13,13 +13,19 @@ namespace CodeFlow.Web.Controllers
         private readonly IAnswerRepository _answerRepository;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ITagRepository _tagRepository;
+        private readonly ICommentRepository _commentRepository;
 
-        public QuestionsController(IQuestionRepository questionRepository, UserManager<ApplicationUser> userManager, IAnswerRepository answerRepository, ITagRepository tagRepository)
+        public QuestionsController(
+            IQuestionRepository questionRepository,
+            UserManager<ApplicationUser> userManager, 
+            IAnswerRepository answerRepository, 
+            ITagRepository tagRepository, ICommentRepository commentRepository)
         {
             _questionRepository = questionRepository;
             _userManager = userManager;
             _answerRepository = answerRepository;
             _tagRepository = tagRepository;
+            _commentRepository = commentRepository;
         }
 
         public async Task<IActionResult> Details(int id)
@@ -36,7 +42,8 @@ namespace CodeFlow.Web.Controllers
                 return new AnswerViewModel(answer)
                 {
                     IsAuthor = IsAuthor(answer.UserId),
-                    CurrentVote = await CurrentVoteForAnswers(answer.Id)
+                    CurrentVote = await CurrentVoteForAnswers(answer.Id),
+                    Comments = await _commentRepository.GetAnswerCommentsAsync(answer.Id),
                 };
             }));
 
@@ -45,7 +52,8 @@ namespace CodeFlow.Web.Controllers
                 Question = new QuestionViewModel(question)
                 {
                     IsAuthor = IsAuthor(question.UserId),
-                    CurrentVote = await CurrentUserVote(question.Id)
+                    CurrentVote = await CurrentUserVote(question.Id),
+                    Comments = await _commentRepository.GetQuestionCommentsAsync(question.Id),
                 },
                 Answers = updatedAnswers
             };
@@ -193,6 +201,83 @@ namespace CodeFlow.Web.Controllers
             return RedirectToAction(nameof(Details), new { id = question.Id });
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public async Task<IActionResult> CommentOnQuestion(int id, string body)
+        {
+            if (string.IsNullOrWhiteSpace(body))
+            {
+                ModelState.AddModelError("", "Comment Body cannot be empty");
+                return await RedisplayDetailsPage(id);
+            }
+
+            if(body.Length > 500)
+            {
+                ModelState.AddModelError("body", "Comment body is too long");
+                return await RedisplayDetailsPage(id);
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null) {
+                return RedirectToAction(nameof(Details), new { id = id });
+            }
+
+            var comment = new Comment
+            {
+                Body = body,
+                QuestionId = id,
+                UserId = user.Id,
+            };
+
+            await _commentRepository.AddCommentAsync(comment);
+            return RedirectToAction(nameof(Details), new { id = id });
+
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public async Task<IActionResult> CommentOnAnswer(int id, string body)
+        {
+            var question = await _answerRepository.GetQuestionByAnserIdAync(id);
+            if (question == null)
+            {
+                return NotFound();
+            }
+            
+            if (string.IsNullOrWhiteSpace(body))
+            {
+                ModelState.AddModelError("", "Comment Body cannot be empty");
+                return await RedisplayDetailsPage(question.Id);
+            }
+
+            if (body.Length > 500)
+            {
+                ModelState.AddModelError("body", "Comment body is too long");
+                return await RedisplayDetailsPage(question.Id);
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return RedirectToAction(nameof(Details), new { id = question.Id });
+            }
+
+            var comment = new Comment
+            {
+                Body = body,
+                AnswerId = id,
+                UserId = user.Id,
+            };
+
+            await _commentRepository.AddCommentAsync(comment);
+            return RedirectToAction(nameof(Details), new { id = question.Id });
+
+        }
+
         private async Task<IActionResult> RedisplayDetailsPage(int questionId)
         {
             var question = await _questionRepository.GetByIdAsync(questionId);
@@ -207,7 +292,8 @@ namespace CodeFlow.Web.Controllers
                 return new AnswerViewModel(answer)
                 {
                     IsAuthor = IsAuthor(answer.UserId),
-                    CurrentVote = await CurrentVoteForAnswers(answer.Id)
+                    CurrentVote = await CurrentVoteForAnswers(answer.Id),
+                    Comments = await _commentRepository.GetAnswerCommentsAsync(answer.Id),
                 };
             }));
 
@@ -216,7 +302,8 @@ namespace CodeFlow.Web.Controllers
                 Question = new QuestionViewModel(question)
                 {
                     IsAuthor = IsAuthor(question.UserId),
-                    CurrentVote = await CurrentUserVote(question.Id)
+                    CurrentVote = await CurrentUserVote(question.Id),
+                    Comments = await _commentRepository.GetQuestionCommentsAsync(question.Id),
                 },
                 Answers = updatedAnswers
             };

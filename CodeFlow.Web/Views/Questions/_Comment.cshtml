@@ -1,0 +1,15 @@
+﻿@model CodeFlow.core.Models.Comment
+
+<div class="so-comment">
+    @if (Model.User != null)
+    {
+        <span class="so-comment-user">
+            – <strong>@Model.User.DisplayName</strong>
+        </span>
+    }
+    <span class="so-comment-date">
+        @Model.CreatedAt.ToString("MMM dd 'at' HH:mm")
+    </span>
+    <span class="so-comment-body">@Model.Body</span>
+</div>
+<hr class="so-comment-divider" />

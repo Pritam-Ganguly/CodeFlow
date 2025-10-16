@@ -1,0 +1,17 @@
+CREATE TABLE Comments (
+  Id SERIAL PRIMARY KEY,
+  BODY VARCHAR(500) NOT NULL,
+  UserId INTEGER NOT NULL REFERENCES Users(Id) ON DELETE CASCADE,
+  QuestionId INTEGER REFERENCES Questions(Id) ON DELETE CASCADE,
+  AnswerId INTEGER REFERENCES Answers(Id) ON DELETE CASCADE,
+  CreatedAt TIMESTAMP NOT NULL DEFAULT (NOW() AT TIME ZONE 'utc'),
+  UpdatedAT TIMESTAMP NULL,
+  CONSTRAINT CHK_Comment_Target CHECK (
+    (QuestionId IS NOT NULL AND AnswerId IS NULL) OR 
+    (AnswerId IS NOT NULL AND QuestionId IS NULL)
+  )
+);
+
+CREATE INDEX IX_Comments_UserId ON Commnets(UserId);
+CREATE INDEX IX_Comments_QuestionId ON Commnets(QuestionId);
+CREATE INDEX IX_Comments_AnswerId ON Commnets(AnswerId);
