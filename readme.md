@@ -2,6 +2,8 @@ CodeFlow - A stack overflow clone.
 
 ![alt text](image.png)
 
+docker exec -it codeflow_db psql -U codeflow_user -d codeflow
+
 
 # Roadmap
 
@@ -13,18 +15,18 @@ CodeFlow - A stack overflow clone.
   - ✅ Prevent self-voting
 
 - [ ] **Answer Acceptance**
-  - [ ] Add "Accept Answer" functionality for question owners
-  - [ ] Visual indicator for accepted answers
+  - ✅ Add "Accept Answer" functionality for question owners
+  - ✅ Visual indicator for accepted answers
   - [ ] Reputation reward for accepted answers
-  - [ ] Only one accepted answer per question
+  - ✅ Only one accepted answer per question
 
-- [ ] **Comment System**
-  - [ ] Create `Comments` table with FK to Questions/Answers
-  - [ ] Implement comment repository
-  - [ ] Add comment controller actions
-  - [ ] AJAX-based comment posting/editing
-  - [ ] Comment voting (if needed)
-  - [ ] Character limit validation (e.g., 500 chars)
+- ✅ **Comment System**
+  - ✅ Create `Comments` table with FK to Questions/Answers
+  - ✅ Implement comment repository
+  - ✅ Add comment controller actions
+  - ✅ AJAX-based comment posting/editing
+  - ✅ Comment voting (if needed)
+  - ✅ Character limit validation (e.g., 500 chars)
 
 - [ ] **User Profiles & Reputation**
   - [ ] User profile page showing activity

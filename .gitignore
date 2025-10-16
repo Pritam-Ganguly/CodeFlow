@@ -1,6 +1,69 @@
+
+## Ignore Visual Studio temporary files, build results, and
+# User-specific files
 .vs/
-CodeFlow.core/bin/
-CodeFlow.core/obj/
-CodeFlow.Web/bin/
-CodeFlow.Web/obj/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build folders
+**/bin/
+**/obj/
+**/publish/
+
+# Rider / JetBrains
+.idea/
+*.sln.iml
+.idea/*
+
+# VS Code
+.vscode/
+
+# NuGet packages and caches
+*.nupkg
+*.snupkg
+/packages/
+/.nuget/packages/
+project.lock.json
+project.assets.json
+
+# Logs and test results
+*.log
+TestResults/
+coverage/
+*.coverage
+coverage*.xml
+
+# Runtime files
+*.pid
+*.seed
+
+# User secrets and environment files
+.env
+.env.local
+secrets.json
+appsettings.*.Local.json
+
+# Docker
+docker-compose.override.yml
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Node/npm/yarn
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Temporary files
+*.tmp
+*.bak
+
+# Ignore package and tooling artifacts
+.package/
+
+# Keep example env file tracked
 .env.example
