@@ -1,0 +1,87 @@
+﻿@model CodeFlow.Web.Models.AccessDeniedViewModel
+
+@{
+    ViewData["Title"] = "Access Denied";
+
+    var displayUrl = Model.ReturnUrl.ToString();
+}
+
+<style>
+    :root{
+        --so-orange: #f48024;
+        --muted: #6a737c;
+        --border: #e3e6e8;
+        --card-bg: #ffffff;
+        --light-bg: #f8f9fa;
+    }
+
+    .so-access-container { max-width: 980px; margin: 48px auto; }
+    .so-card { background: var(--card-bg); border: 1px solid var(--border); box-shadow: 0 1px 0 rgba(0,0,0,0.04); border-radius: 4px; padding: 24px; }
+    .so-access-header { display:flex; gap:16px; align-items:center; }
+    .so-icon { width:64px; height:64px; border-radius:4px; display:flex; align-items:center; justify-content:center; background:linear-gradient(180deg,#fff,#fafafa); border-left:4px solid var(--so-orange); }
+    .so-icon svg { width:32px; height:32px; fill: var(--so-orange); }
+
+    .so-title h1 { margin:0; font-size:1.5rem; color:#232629; }
+    .so-subtitle { color: var(--muted); margin-top:6px; }
+
+    .so-body { display:flex; gap:24px; margin-top:18px; flex-direction:column; }
+
+    .attempt-block { margin-top:12px; }
+    .attempt-label { font-weight:600; font-size:0.9rem; color:var(--muted); margin-bottom:6px; }
+    .attempt-url { background: var(--light-bg); border:1px solid var(--border); padding:10px 12px; border-radius:4px; font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace; font-size:0.95rem; display:flex; align-items:center; gap:8px; word-break:break-all; }
+
+    .tips { margin-top:8px; padding-left:1rem; }
+    .tips li { margin-bottom:6px; color:var(--muted); }
+</style>
+
+<div class="container so-access-container">
+    <div class="so-card" role="main" aria-labelledby="accessDeniedTitle">
+        <div class="so-access-header">
+            <div class="so-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+                    <path d="M12 2a4 4 0 0 0-4 4v3H7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-1V6a4 4 0 0 0-4-4zM9 9V6a3 3 0 0 1 6 0v3H9z"/>
+                </svg>
+            </div>
+
+            <div class="so-title">
+                <h1 id="accessDeniedTitle">Access denied</h1>
+                <div class="so-subtitle">You do not have permission to view this resource.</div>
+            </div>
+        </div>
+
+        <div class="so-body">
+            <div class="so-main">
+
+                <div class="attempt-block" aria-live="polite">
+                    <div class="attempt-label">Attempted URL</div>
+                    <div class="attempt-url" id="attemptUrl" data-url="@Model.ReturnUrl">
+                        <span style="flex:1">@displayUrl</span>
+                    </div>
+                </div>
+
+                <hr style="margin-top:18px; margin-bottom:18px; border-color:var(--border)"/>
+
+                <p style="color:var(--muted); margin-bottom:8px;">Possible reasons:</p>
+                <ul class="tips" aria-label="Possible reasons">
+                    <li>Your account lacks the required role or privileges.</li>
+                    <li>You are not signed in or signed in with the wrong account.</li>
+                    <li>The page is restricted to specific users or administrators.</li>
+                </ul>
+
+                <div class="d-flex flex-wrap gap-2 mt-5" role="region" aria-label="Actions">
+                    @if (User.Identity!.IsAuthenticated)
+                    {
+                        <form asp-controller="Account" asp-action="Logout" method="post">
+                            <button type="submit" class="btn btn-primary">Logout</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <a asp-controller="Account" asp-action="Login" class="btn btn-primary">Login</a>
+                    }
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">Home</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

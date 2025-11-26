@@ -1,80 +1,246 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using CodeFlow.core.Data;
 using CodeFlow.core.Models;
+using CodeFlow.core.Models.Mapping;
 using Dapper;
+using Microsoft.Extensions.Logging;
 
 namespace CodeFlow.core.Repositories
 {
+    /// <summary>
+    /// Repository for CRUD operations and queries related to answers.
+    /// Provides methods to create, read, update, accept and delete answers.
+    /// Methods include structured logging for entry, important events and errors.
+    /// </summary>
     public class AnswerRepository : IAnswerRepository
     {
         private readonly IDbConnectionFactory _connectionFactory;
+        private readonly IReputationRepository _reputationRepository;
+        private readonly ILogger<AnswerRepository> _logger;
 
-        public AnswerRepository(IDbConnectionFactory connectionFactory)
+        /// <summary>
+        /// Creates a new instance of <see cref="AnswerRepository"/>.
+        /// </summary>
+        public AnswerRepository(IDbConnectionFactory connectionFactory, IReputationRepository reputationRepository, ILogger<AnswerRepository> logger)
         {
             _connectionFactory = connectionFactory;
+            _reputationRepository = reputationRepository;
+            _logger = logger;
         }
 
+        /// <summary>
+        /// Inserts a new answer and returns its generated Id.
+        /// </summary>
         public async Task<int> CreateAsync(Answer answer)
         {
-            var sql = @"
+            _logger.LogDebug("CreateAsync called for QuestionId={QuestionId}, UserId={UserId}", answer.QuestionId, answer.UserId);
+            try
+            {
+                var sql = @"
             INSERT INTO Answers (Body, QuestionId, UserId)
             VALUES (@Body, @QuestionId, @UserId)
             RETURNING Id;";
 
-            using var connection = await _connectionFactory.CreateConnectionAsync();
-            var newId = await connection.ExecuteScalarAsync<int>(sql, answer);
-            return newId;
+                using var connection = await _connectionFactory.CreateConnectionAsync();
+                var newId = await connection.ExecuteScalarAsync<int>(sql, answer);
+                _logger.LogInformation("Answer created with Id={AnswerId} for QuestionId={QuestionId} by UserId={UserId}", newId, answer.QuestionId, answer.UserId);
+                return newId;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create answer for QuestionId={QuestionId}, UserId={UserId}", answer.QuestionId, answer.UserId);
+                throw;
+            }
         }
 
+        /// <summary>
+        /// Retrieves an answer by id. Returns null when not found.
+        /// </summary>
         public async Task<Answer?> GetByIdAsync(int id)
         {
-            var sql = "SELECT * FROM Answers WHERE Id = @Id";
-            using var connection = await _connectionFactory.CreateConnectionAsync();
-            return await connection.QueryFirstOrDefaultAsync<Answer>(sql, param: new { Id = id });
+            _logger.LogDebug("GetByIdAsync called with Id={AnswerId}", id);
+            try
+            {
+                var sql = "SELECT * FROM Answers WHERE Id = @Id";
+                using var connection = await _connectionFactory.CreateConnectionAsync();
+                var answer = await connection.QueryFirstOrDefaultAsync<Answer>(sql, param: new { Id = id });
+                if (answer != null)
+                    _logger.LogInformation("GetByIdAsync found AnswerId={AnswerId} (QuestionId={QuestionId}, UserId={UserId})", id, answer.QuestionId, answer.UserId);
+                else
+                    _logger.LogInformation("GetByIdAsync did not find AnswerId={AnswerId}", id);
+                return answer;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get answer by Id={AnswerId}", id);
+                throw;
+            }
         }
 
+        /// <summary>
+        /// Returns all answers for a question ordered by score desc then creation asc.
+        /// </summary>
         public async Task<IEnumerable<Answer>> GetByQuestionIdAsync(int questionId)
         {
-            var sql = @"
+            _logger.LogDebug("GetByQuestionIdAsync called for QuestionId={QuestionId}", questionId);
+            try
+            {
+                var sql = @"
             SELECT a.*, u.*
             FROM Answers a
             INNER JOIN Users u ON a.UserId = u.Id
             WHERE a.QuestionId = @QuestionId
             ORDER BY a.Score DESC, a.CreatedAt ASC";
 
-            using var connection = await _connectionFactory.CreateConnectionAsync();
-            return await connection.QueryAsync<Answer, User, Answer>(sql, map: (answer, user) =>
-            {
-                answer.User = user;
-                return answer;
-            },
-            param: new { QuestionId = questionId },
-            splitOn: "Id");
+                using var connection = await _connectionFactory.CreateConnectionAsync();
+                var answers = await connection.QueryAsync<Answer, User, Answer>(sql, map: (answer, user) =>
+                {
+                    answer.User = user;
+                    return answer;
+                },
+                param: new { QuestionId = questionId },
+                splitOn: "Id");
 
+                var count = answers?.Count() ?? 0;
+                _logger.LogInformation("GetByQuestionIdAsync returned {Count} answers for QuestionId={QuestionId}", count, questionId);
+                return answers ?? [];
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get answers for QuestionId={QuestionId}", questionId);
+                throw;
+            }
         }
 
-        public async Task<Question?> GetQuestionByAnserIdAync(int answerId)
+        /// <summary>
+        /// Returns the question that an answer belongs to.
+        /// </summary>
+        public async Task<Question?> GetQuestionByAnswerIdAsync(int answerId)
         {
-            using var connection = await _connectionFactory.CreateConnectionAsync();
-            var sql = "SELECT q.* FROM Questions q INNER JOIN Answers a ON q.Id = a.QuestionId WHERE a.Id = @Id";
-            return await connection.QueryFirstOrDefaultAsync<Question?>(sql, new {Id = answerId});
-        } 
+            _logger.LogDebug("GetQuestionByAnswerIdAsync called for AnswerId={AnswerId}", answerId);
+            try
+            {
+                using var connection = await _connectionFactory.CreateConnectionAsync();
+                var sql = "SELECT q.* FROM Questions q INNER JOIN Answers a ON q.Id = a.QuestionId WHERE a.Id = @Id";
+                var question = await connection.QueryFirstOrDefaultAsync<Question>(sql, new { Id = answerId });
+                if (question != null)
+                    _logger.LogInformation("GetQuestionByAnswerIdAsync found QuestionId={QuestionId} for AnswerId={AnswerId}", question.Id, answerId);
+                else
+                    _logger.LogInformation("GetQuestionByAnswerIdAsync did not find a question for AnswerId={AnswerId}", answerId);
+                return question;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get question for AnswerId={AnswerId}", answerId);
+                throw;
+            }
+        }
 
+        /// <summary>
+        /// Marks an answer accepted and awards reputation to the answer owner.
+        /// Returns number of affected rows from the update.
+        /// </summary>
         public async Task<int> AcceptAnswer(int answerId)
         {
-            using var connection = await _connectionFactory.CreateConnectionAsync();
-            var sql = @"UPDATE Answers SET IsAccepted = TRUE WHERE Id = @Id";
-            return await connection.ExecuteAsync(sql, new { Id = answerId });
+            _logger.LogDebug("AcceptAnswer called for AnswerId={AnswerId}", answerId);
+            try
+            {
+                using var connection = await _connectionFactory.CreateConnectionAsync();
+                var sql = @"UPDATE Answers SET IsAccepted = TRUE WHERE Id = @Id";
+
+                var answer = await GetByIdAsync(answerId);
+                var question = await GetQuestionByAnswerIdAsync(answerId);
+
+                if (answer == null || question == null)
+                {
+                    _logger.LogWarning("AcceptAnswer could not find answer or question for AnswerId={AnswerId}. AnswerFound={AnswerFound}, QuestionFound={QuestionFound}", answerId, answer != null, question != null);
+                }
+                else
+                {
+                    try
+                    {
+                        await _reputationRepository.AddReputationTransactionAsync(
+                            answer.UserId, ReputationTransactionTypes.Answer_Accepted, question.Id, RelatedPostType.Question);
+                        _logger.LogInformation("Reputation transaction added for UserId={UserId} for accepted AnswerId={AnswerId}", answer.UserId, answerId);
+                    }
+                    catch (Exception repEx)
+                    {
+                        // log reputation errors but continue to mark answer accepted (to avoid inconsistent UI state)
+                        _logger.LogError(repEx, "Failed to add reputation transaction for AnswerId={AnswerId}, UserId={UserId}", answerId, answer.UserId);
+                    }
+                }
+
+                var rows = await connection.ExecuteAsync(sql, new { Id = answerId });
+                _logger.LogInformation("AcceptAnswer updated AnswerId={AnswerId}. RowsAffected={Rows}", answerId, rows);
+                return rows;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to accept answer AnswerId={AnswerId}", answerId);
+                throw;
+            }
         }
 
+        /// <summary>
+        /// Edits an existing answer's body. Returns number of affected rows (nullable).
+        /// </summary>
         public async Task<int?> EditAnswerAsync(int answerId, string body)
         {
-            using var connection = await _connectionFactory.CreateConnectionAsync();
-            var sql = @"UPDATE Answers SET Body = @Body WHERE Id = @Id";
-            return await connection.ExecuteAsync(sql, new { Body = body, Id = answerId });
+            _logger.LogDebug("EditAnswerAsync called for AnswerId={AnswerId}", answerId);
+            try
+            {
+                using var connection = await _connectionFactory.CreateConnectionAsync();
+                var sql = @"UPDATE Answers SET Body = @Body WHERE Id = @Id";
+                var rows = await connection.ExecuteAsync(sql, new { Body = body, Id = answerId });
+                _logger.LogInformation("EditAnswerAsync updated AnswerId={AnswerId}. RowsAffected={Rows}", answerId, rows);
+                return rows;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to edit answer AnswerId={AnswerId}", answerId);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Deletes an answer. Returns true when a row was deleted.
+        /// </summary>
+        public async Task<bool> DeleteAnswerAsync(int answerId)
+        {
+            _logger.LogInformation("DeleteAnswerAsync called for AnswerId={AnswerId}", answerId);
+            try
+            {
+                using var connection = await _connectionFactory.CreateConnectionAsync();
+                var sql = @"DELETE FROM Answers WHERE Id = @Id";
+                var rowsAltered = await connection.ExecuteAsync(sql, new { Id = answerId });
+                _logger.LogInformation("DeleteAnswerAsync completed for AnswerId={AnswerId}. RowsAffected={Rows}", answerId, rowsAltered);
+                return rowsAltered > 0;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to delete answer AnswerId={AnswerId}", answerId);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Returns the number of accepted answers for a given user.
+        /// </summary>
+        public async Task<int> GetAcceptedAnswerCountByUserIdAsync(int userId)
+        {
+            _logger.LogDebug("GetAcceptedAnswerCountByUserIdAsync called for UserId={UserId}", userId);
+            try
+            {
+                using var connection = await _connectionFactory.CreateConnectionAsync();
+                var sql = @"SELECT COUNT(*) FROM Answers WHERE UserId = @UserId AND IsAccepted = TRUE";
+                var count = await connection.ExecuteScalarAsync<int>(sql, new { UserId = userId });
+                _logger.LogInformation("GetAcceptedAnswerCountByUserIdAsync UserId={UserId} AcceptedCount={Count}", userId, count);
+                return count;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get accepted answer count for UserId={UserId}", userId);
+                throw;
+            }
         }
     }
 }

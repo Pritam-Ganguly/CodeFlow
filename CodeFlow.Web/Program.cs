@@ -1,14 +1,12 @@
-using System.Linq.Expressions;
 using CodeFlow.core.Data;
 using CodeFlow.core.Identity;
 using CodeFlow.core.Models;
-using CodeFlow.core.Repositories;
+using CodeFlow.core.Repositories.Seed;
+using CodeFlow.Web.Extensions;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllersWithViews();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
@@ -17,7 +15,16 @@ if (string.IsNullOrEmpty(connectionString))
     connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
 }
 
-builder.Services.AddScoped<IDbConnectionFactory>(_ => new NpgsqlConnectionFactory(builder.Configuration));
+builder.Services.AddCodeFlowServices();
+builder.Services.AddCustomValidationServices();
+
+builder.Services.AddScoped<IDbConnectionFactory>(serviceProvider =>
+{
+    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+    var logger = serviceProvider.GetRequiredService<ILogger<NpgsqlConnectionFactory>>();
+    return new NpgsqlConnectionFactory(configuration, logger);
+});
+
 builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
 {
     options.Password.RequireDigit = false;
@@ -38,21 +45,13 @@ if (!builder.Environment.IsDevelopment())
     {
         options.Preload = true;
         options.IncludeSubDomains = true;
-        options.MaxAge = TimeSpan.FromDays(60);
+        options.MaxAge = TimeSpan.FromDays(30);
     });
 }
 
-builder.Services.AddScoped<IDbConnectionFactory, NpgsqlConnectionFactory>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
-builder.Services.AddScoped<IAnswerRepository, AnswerRepository>();
-builder.Services.AddScoped<IVoteRepository, VoteRepository>();
-builder.Services.AddScoped<ITagRepository, TagRepository>();
-builder.Services.AddScoped<ICommentRepository, CommentRepository>();
-
 var app = builder.Build();
 
-if (!app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
 }
@@ -61,6 +60,14 @@ else
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
     app.UseHttpsRedirection();
+}
+
+app.UseStatusCodePagesWithReExecute("/Home/Error", "?statusCode={0}");
+
+using (var scope = app.Services.CreateScope())
+{
+    var badgeDataSeedService = scope.ServiceProvider.GetRequiredService<BadgeDataSeed>();
+    await badgeDataSeedService.SeedBadges();
 }
 
 app.UseHttpsRedirection();

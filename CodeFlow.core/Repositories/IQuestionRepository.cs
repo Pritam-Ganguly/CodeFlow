@@ -10,8 +10,11 @@ namespace CodeFlow.core.Repositories
         Task<Question?> GetByIdWithTagsAsync(int id);
         Task<IEnumerable<Question>> SearchAsync(string searchQuery);
         Task<IEnumerable<Question>> GetRecentWithTagsAsync(int limit = 20);
+        Task<IEnumerable<Question>> GetAllQuestionsByUserId(int userId);
         Task<int?> CurrentVoteAsync(int userId, int quesitonId);
         Task<int?> CurrentVoteForAnswerItemAsync(int userId, int answerId);
         Task<int> UpdateQuestionAsync(int questionId, string newTitle, string newBody);
+        Task<bool> DeleteQuestionAsync(int questionId, int userId);
+        Task<bool> FirstPost(int userId);
     }
 }

@@ -1,0 +1,16 @@
+﻿@model IEnumerable<CodeFlow.Web.Components.UserActivityViewComponentModel>
+
+@if (Model.Any())
+{
+    foreach (var userActivity in Model)
+    {
+        <div class="activity-item mb-1 pb-1 border-bottom">
+            <p class="row mb-2 text-muted small">
+                <span class=" col-4 p-1 fw-bold" style="color: cadetblue">@userActivity.ActivityTime.ToString() - </span>
+                <span class=" col-8 p-1">
+                    @userActivity.Description
+                </span>
+            </p>
+        </div>
+    }
+}

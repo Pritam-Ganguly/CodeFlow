@@ -1,0 +1,153 @@
+﻿@model CodeFlow.Web.Components.AnswerViewComponentModel;
+
+<h5>@(Model.Answers.Count()) @(Model.Answers.Count() == 1 ? "Answer" : " Answers")</h5>
+<hr />
+@if (Model.Answers.Any())
+{
+    var answers = Model.Answers;
+    answers = answers.OrderByDescending(a => a.IsAccepted).ThenByDescending(a => a.CreatedAt);
+    foreach (var answer in answers)
+    {
+        <div class="card answers-section mb-3">
+            <div class="card-body row">
+                <div class="col-1">
+                    @if (!User.Identity!.IsAuthenticated)
+                    {
+                        <a class="text-decoration-none" asp-controller="Account" asp-action="Login">
+                            <i class="fa-solid fa-caret-up fa-2x text-muted"></i>
+                        </a>
+                        <div class="score fs-5 fw-bold my-1 ps-1" id="answer-score-@answer.Id">@answer.Score</div>
+                        <a class="text-decoration-none" asp-controller="Account" asp-action="Login">
+                            <i class="fas fa-caret-down fa-2x text-muted"></i>
+                        </a>
+                    }
+                    else if (!answer.IsAuthor)
+                    {
+                        <a href="#" class="vote-link text-decoration-none" data-type="answer" data-id="@answer.Id" data-vote="1">
+                            <i class="fa-solid fa-caret-up fa-2x" style="color:@(answer.CurrentVote == 1 ? "grey" : "lightgrey")"></i>
+                        </a>
+                        @if (answer.IsAccepted)
+                        {
+                            <a href="#" class="text-decoration-none" data-type="answer" data-id="@answer.Id" data-vote="-1">
+                                <i class="fas fa-check fa-2x" style="color: forestgreen"></i>
+                            </a>
+                        }
+                        <div class="score fs-5 fw-bold my-1 ps-1" id="answer-score-@answer.Id">@answer.Score</div>
+                        <a href="#" class="vote-link text-decoration-none" data-type="answer" data-id="@answer.Id" data-vote="-1">
+                            <i class="fas fa-caret-down fa-2x" style="color:@(answer.CurrentVote == -1 ? "grey" : "lightgrey")"></i>
+                        </a>
+
+                        @if (!answer.IsAccepted && Model.IsAuthor)
+                        {
+                            <form asp-controller="Questions"
+                                  asp-action="AcceptAnswer"
+                                  asp-route-answerId="@answer.Id"
+                                  method="post"
+                                  class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="so-accept-button text-decoration-none" title="Accept answer">
+                                    <i class="fas fa-check fa-2x" style="color: cadetblue"></i>
+                                </button>
+                            </form>
+                        }
+                    }
+                </div>
+                <div class="col-10 answer-body">
+                    <span id="answer-body-@answer.Id">@answer.Body</span>
+                    <form id="answer-form-@answer.Id" asp-controller="Questions" asp-action="EditAnswer" asp-route-Id="@answer.Id" style="display:none">
+                        @Html.AntiForgeryToken()
+                        <div class="form-group mb-3">
+                            <textarea name="body" class="form-control" rows="6">@answer.Body</textarea>
+                        </div>
+                        <div class="form-group">
+                            <input class="btn btn-primary" type="submit" value="Update" />
+                            <button class="btn btn-secondary" onclick="handleClose(@answer.Id)">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+                @if (!answer.IsAccepted && answer.IsAuthor)
+                {
+                    <div class="col-1 answer-body">
+                        <form asp-controller="Questions" asp-action="DeleteAnswer" method="post" asp-route-answerId="@answer.Id">
+                            @Html.AntiForgeryToken()
+                            <button class="so-delete-icon-button" type="submit">
+                                <i class="fas fa-trash text-opacity-50" style="color: cadetblue"></i>
+                            </button>
+                        </form>
+                    </div>
+                    <div class="col-2">
+                        <a href="javascript:void(0);" class="text-decoration-none" onclick="handleOpen(@answer.Id)">
+                            <i class="fas fa-pen-to-square text-opacity-50" style="color: cadetblue"></i>
+                        </a>
+                    </div>
+                }
+                <div class="col-md-7 offset-md-6 text-muted mt-2 justify-content-end so-postdate">
+                    Answered by <strong>@answer.User?.DisplayName</strong> on @answer.CreatedAt.ToString("MMM dd, yyyy")
+
+                    @if (answer.IsAccepted)
+                    {
+                        <span class="badge bg-success ms-2">Accepted</span>
+                    }
+                </div>
+                <div>
+                    @if (ViewData.ModelState["answer-" + answer.Id]?.Errors.Count > 0)
+                    {
+                        <span class="text-danger">@ViewData.ModelState["answer-" + answer.Id]?.Errors.First().ErrorMessage</span>
+                    }
+                    else if (ViewData.ModelState[string.Empty]?.Errors.Count > 0)
+                    {
+                        <span class="text-danger">@ViewData.ModelState[string.Empty]?.Errors.First().ErrorMessage</span>
+                    }
+                </div>
+            </div>
+            <div class="answer-comments-section p-2" answer-id="@answer.Id">
+                <h6>
+                    @answer.Comments.Count() @(answer.Comments.Count() > 1 ? "Comments" : "Comment")
+                    <span id="toggle-arrow-@answer.Id" answer-class="so-toggle-arrow" style="cursor:pointer;">
+                        <i class="fa-solid fa-caret-down"></i>
+                    </span>
+                </h6>
+                <div>
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <form asp-controller="Questions" asp-action="CommentOnAnswer" asp-route-id="@answer.Id" method="post" class="so-add-comment-form">
+                            @Html.AntiForgeryToken()
+
+                            <div class="form-group mb-1">
+                                <textarea name="body" class="form-control so-comment-textarea" rows="2" placeholder="Add a comment"></textarea>
+                                @if (ViewData.ModelState["comment-answer-" + answer.Id]?.Errors.Count > 0)
+                                {
+                                    <span class="text-danger so-comment-error">@ViewData.ModelState["comment-answer-" + answer.Id]?.Errors.First().ErrorMessage</span>
+                                }
+                                else if (ViewData.ModelState[string.Empty]?.Errors.Count > 0)
+                                {
+                                    <span class="text-danger so-comment-error">@ViewData.ModelState[string.Empty]?.Errors.First().ErrorMessage</span>
+                                }
+                            </div>
+                            <div class="form-group d-inline">
+                                <input class="btn btn-sm btn-outline-secondary so-comment-btn" type="submit" value="Add a Comment" />
+                            </div>
+                        </form>
+                    }
+                    else
+                    {
+                        <div class="mb-3">
+                            <span>Please log in to comment on answers</span> - <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Context.Request.Path"> Login</a>
+                        </div>
+                    }
+                </div>
+                <div id="comments-section-answer-@answer.Id" class="so-comments-container" style="display: block">
+                    @foreach (var comment in answer.Comments)
+                    {
+                        @await Html.PartialAsync("_Comment", comment)
+                    }
+                </div>
+            </div>
+        </div>
+
+    }
+}
+else
+{
+    <p class="text-muted">No answers yet. Be the first to answer</p>
+}

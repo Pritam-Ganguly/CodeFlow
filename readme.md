@@ -4,7 +4,6 @@ CodeFlow - A stack overflow clone.
 
 docker exec -it codeflow_db psql -U codeflow_user -d codeflow
 
-
 # Roadmap
 
 ### Core Feature Enhancements
@@ -14,10 +13,10 @@ docker exec -it codeflow_db psql -U codeflow_user -d codeflow
   - ✅ Add visual feedback for voted posts
   - ✅ Prevent self-voting
 
-- [ ] **Answer Acceptance**
+- ✅ **Answer Acceptance**
   - ✅ Add "Accept Answer" functionality for question owners
   - ✅ Visual indicator for accepted answers
-  - [ ] Reputation reward for accepted answers
+  - ✅ Reputation reward for accepted answers
   - ✅ Only one accepted answer per question
 
 - ✅ **Comment System**
@@ -28,18 +27,27 @@ docker exec -it codeflow_db psql -U codeflow_user -d codeflow
   - ✅ Comment voting (if needed)
   - ✅ Character limit validation (e.g., 500 chars)
 
-- [ ] **User Profiles & Reputation**
-  - [ ] User profile page showing activity
-  - [ ] Reputation calculation system
-  - [ ] Badges/Achievements system
-  - [ ] User activity history (questions, answers, votes)
-  - [ ] Profile editing capabilities
+- ✅ **User Profiles & Reputation**
+  - ✅ User profile page showing activity
+  - ✅ Reputation calculation system
+  - ✅ Badges/Achievements system
+  - ✅ User activity history (questions, answers, votes)
+  - ✅ Profile editing capabilities, bio, image upload
+
+- ✅ **Code Refactor**
+  - ✅ Extention method for Program.cs
+  - ✅ Custom Filter for actions
+  - ✅ Logging system
+  - ✅ Fluent Validation
+  - ✅ Custom middleware
+  - ✅ Authentication and Autorization
 
 ### UI/UX Improvements
 - [ ] **Pagination**
   - [ ] Implement server-side pagination for question lists
   - [ ] Add "Load More" or traditional page numbers
   - [ ] Configurable page sizes (20, 50, 100)
+  - [ ] Add filtering logic
 
 - [ ] **Rich Text Editing**
   - [ ] Integrate Markdown editor (e.g., EasyMDE, SimpleMDE)

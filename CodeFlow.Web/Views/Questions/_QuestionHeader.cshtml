@@ -1,0 +1,33 @@
+﻿@model CodeFlow.Web.Models.QuestionViewModel
+
+@{
+    var isAuthor = Model.IsAuthor;
+}
+
+<div class="row">
+    <div class="col-12 so-question-title">@Model.Title</div>
+</div>
+<div class="row justify-content-start">
+    <div class="col-6 so-postdate">
+        Asked on @Model.CreatedAt.ToString("MMM dd, yyyy 'at' h:mm tt") by 
+        <a asp-controller="Profile" asp-action="UserProfile" asp-route-id="@Model.User?.Id">
+            <strong>@Model.User?.DisplayName</strong>
+        </a>
+    </div>
+    @if (isAuthor)
+    {
+        <div class="col-1 offset-4">
+            <a class="text-decoration-none" asp-controller="Questions" asp-action="Edit" asp-route-id="@Model.Id">
+                <i class="fas fa-pen-to-square text-opacity-50" style="color: cadetblue"></i>
+            </a>
+        </div>
+        <div class="col-1">
+            <form asp-controller="Questions" asp-action="Delete" method="post" asp-route-questionId="@Model.Id">
+                @Html.AntiForgeryToken()
+                <button class="so-delete-icon-button" type="submit">
+                    <i class="fas fa-trash text-opacity-50" style="color: cadetblue"></i>
+                </button>
+            </form>
+        </div>
+    }
+</div>

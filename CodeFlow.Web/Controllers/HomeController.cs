@@ -1,8 +1,9 @@
-using System.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
-using CodeFlow.Web.Models;
 using CodeFlow.core.Models;
 using CodeFlow.core.Repositories;
+using CodeFlow.Web.Models;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
 namespace CodeFlow.Web.Controllers;
 
@@ -20,28 +21,70 @@ public class HomeController : Controller
     public async Task<IActionResult> Index(string search)
     {
         IEnumerable<Question> questions;
-
-        if (!string.IsNullOrWhiteSpace(search))
+        try
         {
-            questions = await _questionRepository.SearchAsync(search);
-            ViewData["SearchQuery"] = search;
+
+            HomeViewModel model = new HomeViewModel();
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                _logger.LogInformation("Search query executed: {SearchQuery}", search);
+
+                questions = await _questionRepository.SearchAsync(search);
+
+                ViewData["SearchQuery"] = search;
+                model.IsSearchResult = true;
+                model.SearchTerm = search;
+            }
+            else
+            {
+                _logger.LogInformation("Fetching all questions");
+                questions = await _questionRepository.GetRecentWithTagsAsync();
+            }
+            model.Questions = questions;
+
+            _logger.LogInformation("Search completed succesfully");
+
+            return View(model);
         }
-        else
+        catch(Exception ex)
         {
-            questions = await _questionRepository.GetRecentWithTagsAsync();
+            _logger.LogError(ex, "An error occured while searching question using {SerachQuery}", search);
+
+            HomeViewModel errorModel = new HomeViewModel()
+            {
+                HasError = true,
+                ErrorMessage = $"An error occured: {ex.Message}"
+            };
+            return View(errorModel);   
         }
-
-        return View(questions);
-    }
-
-    public IActionResult Privacy()
-    {
-        return View();
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error()
+    public IActionResult Error(int statusCode = 500)
     {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        string RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+        var exceptionHandlerPathFeature = HttpContext.Features.Get<IExceptionHandlerPathFeature>();
+        var statusCodeFeature = HttpContext.Features.Get<IStatusCodeReExecuteFeature>();
+
+        var errorModel = new ErrorViewModel()
+        {
+            RequestId = RequestId,
+            StatusCode = statusCode
+        };
+
+        if (statusCodeFeature != null)
+        {
+            var original = statusCodeFeature.OriginalPath ?? string.Empty;
+            var query = statusCodeFeature.OriginalQueryString ?? string.Empty;
+            errorModel.OriginalPath = original + query;
+            _logger.LogWarning("Returning status code page {StatusCode} for original path {OriginalPath}{OriginalQuery}", statusCode, original, query);
+        }
+        if (exceptionHandlerPathFeature?.Error != null)
+        {
+            _logger.LogError(exceptionHandlerPathFeature.Error, "Error occured processing request {RequestId} for path {Path}", RequestId, exceptionHandlerPathFeature.Path);
+            errorModel.OriginalPath = exceptionHandlerPathFeature.Path;
+        }
+
+        return View(errorModel);
     }
 }

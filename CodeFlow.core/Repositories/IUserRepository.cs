@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using CodeFlow.core.Models;
 
 namespace CodeFlow.core.Repositories
@@ -10,6 +6,9 @@ namespace CodeFlow.core.Repositories
     {
         Task<User> GetByIdAsync(int id);
         Task<User?> GetByEmailAsync(string email);
-        Task<int> CreateAsync(User user);
+        Task<UserProfile?> GetUserProfile(int id);
+        Task<int?> CreateUserProfile(int id);
+        Task<bool> UpdateUserProfileBio(int id, string bio);
+        Task<bool> UpdateUserProfileImage(int id, string profilePictureMimeType, string profilePictureName, byte[] profilePicture);
     }
 }

@@ -14,7 +14,7 @@
 </head>
 <body class="bg-light">
     <header class="so-header">
-        <nav class="navbar navbar-expand-lg so-navbar" x-data="{ isOpen: false }">
+        <nav class="navbar navbar-expand-lg so-navbar justify-content-between" x-data="{ isOpen: false }">
             <div class="container-fluid so-container">
                 <a class="navbar-brand so-brand" asp-area="" asp-controller="Home" asp-action="Index">
                     <i class="fab fa-stack-overflow me-1"></i>CodeFlow
@@ -24,19 +24,29 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                    <ul class="navbar-nav">
+                    <form asp-action="Index" asp-controller="Home" method="get" class="d-flex my-2 my-lg-0 mx-auto" style="width: 100%; max-width: 600px;">
+                        <div class="input-group so-search-group">
+                            <input type="search"
+                                   name="search"
+                                   class="form-control so-search-input"
+                                   placeholder="Search questions..."
+                                   aria-label="Search"
+                                   aria-describedby="search-icon" />
+                            <button class="btn btn-outline-secondary ms-2 so-search-btn" type="submit" aria-label="Search">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                    <ul class="navbar-nav d-flex align-items-center ms-lg-auto so-user-actions">
                         @if (User.Identity!.IsAuthenticated)
                         {
                             <li class="nav-item">
-                                <div class="d-flex align-items-center">
-                                    <div class="so-user-avatar">
-                                        @User.Identity.Name!.Substring(0, 1).ToUpper()
-                                    </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <a asp-controller="Profile" asp-action="UserProfile" asp-route-id="@User.FindFirst(ClaimTypes.NameIdentifier)?.Value">
+                                        <img id="ProfileImage" style="width: 30px; height: 30px"
+                                             src="@Url.Action("ProfileImage", "Profile", new { id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value })"
+                                             class="rounded-circle" />
+                                    </a>
                                     <span class="so-user-name">@User.Identity.Name</span>
                                 </div>
                             </li>
@@ -49,10 +59,10 @@
                         else
                         {
                             <li class="nav-item">
-                                <a class="so-login-btn" asp-controller="Account" asp-action="Register">Register</a>
+                                <a class="so-login-btn" asp-controller="Account" asp-action="Register" asp-route-returnUrl="@Context.Request.Path">Register</a>
                             </li>
                             <li class="nav-item">
-                                <a class="so-signup-btn" asp-controller="Account" asp-action="Login">Login</a>
+                                <a class="so-signup-btn" asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Context.Request.Path">Login</a>
                             </li>
                         }
                     </ul>
@@ -205,5 +215,6 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
+    @await RenderSectionAsync("Styles", required: false)
 </body>
 </html>

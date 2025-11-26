@@ -1,12 +1,13 @@
 :root {
-  --so-orange: #f48225;
-  --so-orange-light: #ffd6b3;
-  --so-dark-blue: #2d2d2d;
-  --so-dark-gray: #3c4146;
-  --so-medium-gray: #6a737c;
-  --so-light-gray: #e4e6e8;
-  --so-white: #ffffff;
-  --so-black: #0c0d0e;
+    --so-orange: #f48225;
+    --so-orange-light: #ffd6b3;
+    --so-dark-blue: #2d2d2d;
+    --so-dark-gray: #3c4146;
+    --so-medium-gray: #6a737c;
+    --so-light-gray: #e4e6e8;
+    --so-white: #ffffff;
+    --so-black: #0c0d0e;
+    --so-search-max: 720px;
 }
 
 body {
@@ -17,6 +18,7 @@ body {
   line-height: 1.3;
 }
 
+/* Header / Navbar */
 .so-header {
   background-color: var(--so-white);
   border-top: 3px solid var(--so-orange);
@@ -45,62 +47,7 @@ body {
   border-radius: 20px;
 }
 
-.so-nav-link {
-  color: var(--so-medium-gray) !important;
-  font-size: 0.9rem;
-  padding: 6px 12px !important;
-  border-radius: 20px;
-  margin: 4px 2px;
-}
-
-.so-nav-link:hover {
-  color: var(--so-dark-gray) !important;
-  background-color: var(--so-light-gray);
-}
-
-.so-nav-link.active {
-  background-color: var(--so-orange-light);
-  color: var(--so-dark-gray) !important;
-  font-weight: 500;
-}
-
-.so-search {
-  background-color: var(--so-white);
-  border: 1px solid var(--so-medium-gray);
-  border-radius: 3px;
-  padding: 8px 9px 8px 32px;
-  font-size: 0.9rem;
-  width: 100%;
-  max-width: 700px;
-}
-
-.so-search:focus {
-  border-color: #6cbbf7;
-  box-shadow: 0 0 0 4px rgba(0, 149, 255, 0.15);
-  outline: none;
-}
-
-.so-search-container {
-  position: relative;
-  flex-grow: 1;
-  max-width: 700px;
-  margin: 0 16px;
-}
-
-.so-search-icon {
-  position: absolute;
-  left: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--so-medium-gray);
-  z-index: 5;
-}
-
-.so-user-menu {
-  display: flex;
-  align-items: center;
-}
-
+/* User actions (login/register/avatar) */
 .so-user-avatar {
   width: 24px;
   height: 24px;
@@ -151,7 +98,7 @@ body {
   color: white;
 }
 
-/* Main content layout */
+/* Main layout */
 .so-container {
   max-width: 1264px;
   margin: 0 auto;
@@ -217,49 +164,7 @@ body {
   padding: 24px 0 0 24px;
 }
 
-/* Homepage specific styles */
-.so-hero {
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200"><rect width="400" height="200" fill="%23f1f2f3"/><path d="M0,100 Q200,50 400,100 L400,200 L0,200 Z" fill="%23f48225" opacity="0.1"/></svg>');
-  background-size: cover;
-  background-position: center;
-  padding: 60px 0;
-  margin-bottom: 16px;
-}
-
-.so-hero-content {
-  max-width: 800px;
-  margin: 0 auto;
-  text-align: center;
-}
-
-.so-hero-title {
-  font-size: 2.5rem;
-  font-weight: 600;
-  margin-bottom: 16px;
-  color: var(--so-dark-gray);
-}
-
-.so-hero-subtitle {
-  font-size: 1.2rem;
-  color: var(--so-medium-gray);
-  margin-bottom: 32px;
-}
-
-.so-ask-btn {
-  background-color: var(--so-orange);
-  color: white;
-  border: none;
-  border-radius: 3px;
-  padding: 10px 16px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.4);
-}
-
-.so-ask-btn:hover {
-  background-color: #da680b;
-}
-
+/* Cards & widgets */
 .so-card {
   background-color: var(--so-white);
   border: 1px solid var(--so-light-gray);
@@ -294,75 +199,7 @@ body {
   margin-bottom: 12px;
 }
 
-.so-tag {
-  display: inline-block;
-  background-color: #e1ecf4;
-  color: #39739d;
-  padding: 4px 6px;
-  margin: 0 6px 6px 0;
-  border-radius: 3px;
-  font-size: 0.8rem;
-  text-decoration: none;
-}
-
-.so-tag:hover {
-  background-color: #d1e5f1;
-  color: #2c5777;
-}
-
-.so-questions-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.so-question-item {
-  padding: 12px 0;
-  border-bottom: 1px solid var(--so-light-gray);
-}
-
-.so-question-stats {
-  width: 60px;
-  text-align: right;
-  margin-right: 16px;
-  color: var(--so-medium-gray);
-  font-size: 0.8rem;
-}
-
-.so-question-content {
-  flex-grow: 1;
-}
-
-.so-question-title {
-  font-size: 1.1rem;
-  color: #0077cc;
-  margin-bottom: 4px;
-  text-decoration: none;
-  display: block;
-}
-
-.so-question-title:hover {
-  color: #0095ff;
-}
-
-.so-question-excerpt {
-  font-size: 0.9rem;
-  color: var(--so-medium-gray);
-  margin-bottom: 8px;
-}
-
-.so-question-meta {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.8rem;
-  color: var(--so-medium-gray);
-}
-
-.so-question-tags {
-  display: flex;
-  flex-wrap: wrap;
-}
-
+/* Footer */
 .so-footer {
   background-color: var(--so-dark-gray);
   color: #9fa6ad;
@@ -420,6 +257,7 @@ body {
   margin-top: 32px;
 }
 
+/* Responsive */
 @media (max-width: 980px) {
   .so-right-sidebar {
     display: none;
@@ -436,117 +274,230 @@ body {
   }
 }
 
-
-.so-question-card{
-
-}
+/* Question / Details specific */
+.so-question-card { }
 
 .so-question-title {
-    font-size: 30px;
-    padding: 0px;
-    color: var(--so-dark-blue);
+  font-size: 1.1rem;
+  color: #0077cc;
+  margin-bottom: 4px;
+  text-decoration: none;
+  display: block;
 }
 
-.so-question-body {
+/* Make title large inside the question card (details page) */
+.so-question-card .so-question-title,
+.so-question-body > .so-question-title {
+  font-size: 30px;
+  padding: 0;
+  color: var(--so-dark-blue);
 }
+
+.so-question-body { }
 
 .so-question-badge {
-    background-color: var(--so-dark-gray);
+  background-color: var(--so-dark-gray);
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  margin-right: 6px;
 }
 
 .so-postdate {
-    padding: 5px 0px 20px 2px;
-    font-size: 12px;
-    color: var(--so-dark-gray);
+  padding: 5px 0px 20px 2px;
+  font-size: 12px;
+  color: var(--so-dark-gray);
 }
 
 .so-accept-button {
-    background: none;
-    border: none;
-    padding: 0;
-    margin: 0;
-    cursor: pointer;
-    text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  text-decoration: none;
 }
 
+/* Comments & add-comment form */
 .so-comments-container {
-    background: none;
-    border: none;
-    margin-top: 8px;
-    margin-bottom: 8px;
-    padding-left: 2px;
-    font-size: 0.95rem;
+  background: none;
+  border: none;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  padding-left: 2px;
+  font-size: 0.95rem;
 }
 
 .so-add-comment-form {
-    background: none;
-    border: none;
-    padding: 0;
-    margin-top: 8px;
+  background: none;
+  border: none;
+  padding: 0;
+  margin-top: 8px;
 }
 
 .so-comment-textarea {
-    font-size: 0.95rem;
-    border-radius: 4px;
-    border: 1px solid #e1e1e1;
-    background: #f8f9fa;
-    resize: vertical;
-    margin-bottom: 2px;
+  font-size: 0.95rem;
+  border-radius: 4px;
+  border: 1px solid #e1e1e1;
+  background: #f8f9fa;
+  resize: vertical;
+  margin-bottom: 2px;
 }
 
 .so-comment-btn {
-    font-size: 0.9rem;
-    padding: 4px 12px;
-    margin-top: 2px;
-    vertical-align: middle;
+  font-size: 0.9rem;
+  padding: 4px 12px;
+  margin-top: 2px;
+  vertical-align: middle;
 }
 
 .so-comment-error {
-    display: block;
-    font-size: 0.85rem;
-    margin-top: 2px;
+  display: block;
+  font-size: 0.85rem;
+  margin-top: 2px;
 }
 
 .so-comment {
-    font-size: 0.95rem;
-    color: #444;
-    background: none;
-    border: none;
-    padding: 2px 0 2px 0;
-    margin-bottom: 0;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
+  font-size: 0.95rem;
+  color: #444;
+  background: none;
+  border: none;
+  padding: 2px 0 2px 0;
+  margin-bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
 }
 
 .so-comment-body {
-    color: #222;
+  color: #222;
 }
 
 .so-comment-user {
-    color: #0077cc;
-    font-size: 0.95em;
+  color: #0077cc;
+  font-size: 0.95em;
 }
 
 .so-comment-date {
-    color: #888;
-    font-size: 0.9em;
+  color: #888;
+  font-size: 0.9em;
 }
 
 .so-comment-divider {
-    border: none;
-    border-top: 1px solid #eee;
-    margin: 2px 0 2px 0;
+  border: none;
+  border-top: 1px solid #eee;
+  margin: 2px 0 2px 0;
 }
 
 .so-toggle-arrow {
-    margin-right: 6px;
-    color: #888;
-    transition: color 0.2s;
+  margin-right: 6px;
+  color: #888;
+  transition: color 0.2s;
 }
 
 .so-toggle-arrow:hover {
-    color: #0077cc;
+  color: #0077cc;
 }
-    
+
+/* Small icon-button controls */
+.so-delete-icon-button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: inherit;
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.so-delete-icon-button:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Search input (used in layout) */
+.so-search {
+  background-color: var(--so-white);
+  border: 1px solid var(--so-medium-gray);
+  border-radius: 3px;
+  padding: 8px 9px 8px 32px;
+  font-size: 0.9rem;
+  width: 100%;
+  max-width: min(var(--so-search-max), 100%);
+}
+
+.so-search:focus {
+  border-color: #6cbbf7;
+  box-shadow: 0 0 0 4px rgba(0, 149, 255, 0.15);
+  outline: none;
+}
+
+.so-search-container {
+  position: relative;
+  flex-grow: 1;
+  max-width: min(var(--so-search-max), 100%);
+  margin: 0 16px;
+}
+
+.so-search-group {
+  max-width: min(var(--so-search-max), 100%);
+  min-width: 200px;
+  width: 100%;
+  align-items: center;
+}
+
+.so-search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--so-medium-gray);
+  z-index: 5;
+  border-radius: 999px;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.95rem;
+}
+
+.so-search-input {
+  border-radius: 999px;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  height: 42px;
+  background: #ffffff;
+  border: 1px solid #e1e4e8;
+  box-shadow: none;
+  transition: box-shadow .15s ease, border-color .15s ease;
+}
+
+.so-search-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 0.15rem rgba(13,110,253,0.08);
+  border-color: #6ea8fe;
+}
+
+.so-search-btn {
+  height: 42px;
+  border-radius: 999px;
+  padding: 0.375rem 0.9rem;
+}
+
+.so-search-icon-btn {
+  color: #6c757d;
+  font-size: 1.05rem;
+}
+
+/* Make search visually balanced inside navbar */
+.navbar .so-search-group .input-group-text,
+.navbar .so-search-group .form-control,
+.navbar .so-search-group .btn {
+  border-radius: 999px;
+}
+
+/* Small tweak to ensure spacing with other nav items */
+.navbar .so-search-group {
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+}

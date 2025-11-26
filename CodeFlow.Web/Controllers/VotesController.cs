@@ -1,5 +1,6 @@
 ﻿using CodeFlow.core.Models;
 using CodeFlow.core.Repositories;
+using CodeFlow.Web.Filters;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -19,6 +20,8 @@ namespace CodeFlow.Web.Controllers
         }
 
         [HttpPost]
+        [LogAction]
+        [TrackUserActivity(ActivityType.vote_cast, TargetEntityType.question)]
         public async Task<IActionResult> Question(int questionId, int voteType)
         {
             if(voteType != 1 && voteType != -1)
@@ -49,6 +52,8 @@ namespace CodeFlow.Web.Controllers
         }
 
         [HttpPost]
+        [LogAction]
+        [TrackUserActivity(ActivityType.vote_cast, TargetEntityType.answer)]
         public async Task<IActionResult> Answer(int answerId, int voteType)
         {
             if (voteType != 1 && voteType != -1)

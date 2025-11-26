@@ -1,0 +1,324 @@
+﻿@model CodeFlow.Web.Models.UserProfileViewModel;
+@{
+    ViewData["Title"] = Model.DisplayName;
+    bool isCurrentUser = Model.Id.ToString() == User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+}
+
+<div class="container mt-4">
+    @section Styles {
+        <style>
+            .profile-overlay {
+                background: rgba(0, 0, 0.5);
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+
+            .profile-picture-container {
+                transition : all 0.3s ease;
+            }
+
+            .profile-picture-container:hover .profile-overlay {
+                opacity: 0.5;
+             }
+
+            .profile-picture-container:hover .profile-overlay i {
+                opacity: 0.8;
+            }
+                    
+                    
+        </style>
+    }
+        <div class="row">
+            <div class="card mb-3 col-4">
+                    <div class="card-body text-center">
+                            <div class="mb-3">
+                    @if (isCurrentUser)
+                    {
+                        <input type="file" id="profileImageInput" accept=".jpg, .png" style="display: none" />
+
+                        <div class="profile-picture-container position-relative rounded-circle d-inline-flex align-items-center justify-content-center"
+                             style="width: 80px; height: 80px;" onclick="handleProfilePictureClick()">
+                            @if (Model.UserProfile?.ProfilePicture.Length == 0)
+                            {
+                                <img id="ProfileImage" style="width: 80px; height: 80px" src="/img/defaultprofile.jpg" class="rounded-circle" />
+                            }
+                            else
+                            {
+                                <img id="ProfileImage" style="width: 80px; height: 80px"
+                                     src="@Url.Action("ProfileImage", "Profile", new {id = Model.Id})"
+                                     class="rounded-circle" />
+                            }
+                            <div class="profile-overlay position-absolute top-0 w-100 h-100 rounded-circle d-flex align-items-center justify-content-center" style="border: 1px black dashed ">
+                                <i class="fas fa-camera text-light" style="font-size: 24px; transition: opacity 0.3s ease;"></i>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        @if (Model.UserProfile?.ProfilePicture.Length == 0)
+                        {
+                            <img id="ProfileImage" style="width: 80px; height: 80px" src="/img/defaultprofile.jpg" class="rounded-circle" />
+                        }
+                        else
+                        {
+                            @* <img id="ProfileImage" style="width: 80px; height: 80px"
+                                 src="data:image/jpeg;base64,@Convert.ToBase64String(Model.UserProfile!.ProfilePicture)"
+                                 class="rounded-circle" /> *@
+                            <img id="ProfileImage" style="width: 80px; height: 80px"
+                                 src="@Url.Action("ProfileImage", "Profile", new { id = Model.Id })"
+                                 class="rounded-circle" />
+                        }
+                    }
+
+                    </div>
+
+                        <h4>@Model.DisplayName</h4>
+                        <div class="reputation-section mt-3 p-3 bg-light rounded">
+                            <div class="fs-2 fw-bold text-primary">@Model.Reputation</div>
+                            <div class="text-muted">reputation</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-3 col-8">
+                    <div class="card-header">
+                        <h6 class="mb-0">Statistics</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6 mb-2">
+                                <div class="fw-bold">@Model.Questions.Count()</div>
+                                <small class="text-muted">Questions Asked</small>
+                            </div>
+                            <div class="col-6 mt-2">
+                                <div class="fw-bold text-success">@Model.AcceptedAnswerCount</div>
+                                <small class="text-muted">Accepted Answers</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-header">
+                        <h6 class="mb-1">Badges</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            @if (Model.Badges.Any())
+                            {
+                                @foreach (var badge in Model.Badges.OrderByDescending(b => b.Id))
+                                {
+                                    <div class="col-auto mb-2">
+                                        <div class="so-badge" data-bs-toggle="tooltip" data-bs-placement="top" title="@badge.Description">
+                                            <div class="so-badge-icon">
+                                                <img style="height: 50px" src="@badge.IconUrl" alt="@badge.Name" />
+                                            </div>
+                                            <small class="so-badge-name">@badge.Name</small>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <div class="row" id="accordion">
+        <div class="card">
+            <div class="card-header p-0" id="bioHeading">
+                <h6 class="mb-0">
+                    <button id="bioHeading" class="btn btn-link btn-block text-left p-3 text-decoration-none"
+                            data-bs-toggle="collapse" data-bs-target="#bioCollapse"
+                            aria-expanded="true" aria-controls="bioCollapse">
+                        <i class="fas fa-user me-2"></i>Bio & Background
+                    </button>
+                    @if (isCurrentUser)
+                    {
+                        <a id="bioEditButton" class="text-decoration-none" onclick="handleEditBio()" style="cursor: pointer">
+                            <i class="fas fa-pen-to-square text-opacity-50" style="color: cadetblue"></i>
+                        </a>
+                    }
+                </h6>
+            </div>
+            <div id="bioCollapse" class="collapse show" aria-labelledby="bioHeading" data-bs-parent="#profileAccordion">
+                <div id="bioDisplay" class="card-body">
+                    @Model.UserProfile?.Bio
+                </div>
+                <div id="bioEdit" style="display:none">
+                    <form asp-controller="Profile" asp-action="UpdateUserBio" asp-route-id="@Model.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        <div class="form-group mb-1">
+                            <textarea name="bio" class="form-control" rows="4">@Model.UserProfile?.Bio</textarea>
+                        </div>
+                        <div class="form-group mb-1">
+                            <button class="btn btn-primary" type="submit">Submit</button>
+                            <button class="btn btn-secondary" type="button" onclick="handlerCloseBio()">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+            <div class="card">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs" id="profileTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="questions-tab" data-bs-toggle="tab"
+                                    data-bs-target="#questions" type="button" role="tab">
+                                Questions (@Model.Questions.Count())
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="reputation-history-tab" data-bs-toggle="tab"
+                                    data-bs-target="#reputation-history" type="button" role="tab">
+                                Reputation History
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="user-activity-tab" data-bs-toggle="tab"
+                                    data-bs-target="#user-activity-history" type="button" role="tab">
+                                Activity History
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="profileTabsContent">
+                        <div class="tab-pane fade show active" id="questions" role="tabpanel">
+                            @if (Model.Questions.Count() > 0)
+                            {
+                                <div class="activity-item mb-1 pb-1 border-bottom">
+                                    <p class="row mb-2 text-muted small">
+                                        <span class=" fw-bold col-1 p-1">
+                                            Score
+                                        </span>
+                                        <span class="fw-bold col-8 p-1">
+                                            Title
+                                        </span>
+                                        <span class="fw-bold col-3 p-1">
+                                            Created At
+                                        </span>
+                                    </p>
+                                </div>
+                                foreach (var question in Model.Questions)
+                                {
+                                    <a asp-controller="Questions" asp-action="Details" asp-route-id="@question.Id">
+                                        <div class="activity-item mb-1 pb-1 border-bottom">
+                                            <p class="row mb-2 text-muted small">
+                                                <span class=" col-1 p-1 fw-bold" style="color: orange">@question.Score</span>
+                                                <span class=" col-8 p-1">
+                                                    @question.Title
+                                                </span>
+                                                <span class="col-3 p-1">
+                                                    @question.CreatedAt
+                                                </span>
+                                            </p>
+
+                                        </div>
+                                    </a>
+                                }
+                            }
+                            else
+                            {
+                                <div class="activity-item mb-1 pb-1 border-bottom">
+                                    <p class="row mb-2 text-muted small">
+                                        No questions to display
+                                    </p>
+                                </div>
+                            }
+                        </div>
+                        <div class="tab-pane fade" id="reputation-history" role="tabpanel">
+                            
+                            @if (Model.ReputationHistory.Any())
+                            {
+                                foreach (var reputationHistory in Model.ReputationHistory)
+                                {
+                                    <div class="activity-item mb-1 pb-1 border-bottom">
+                                        <p class="row mb-2 text-muted small">
+                                        <span class=" col-1 p-1 fw-bold" style="color: orange">@reputationHistory.Amount</span>
+                                        <span class=" col-8 p-1">
+                                            @reputationHistory.Description
+                                        </span>
+                                        <span class="col-3 p-1">
+                                            - @reputationHistory.CreatedAt
+                                        </span>
+                                        </p>
+                                    </div>
+                                }
+                            }
+                        </div>
+                        <div class="tab-pane fade" id="user-activity-history" role="tabpanel">
+                            @await Component.InvokeAsync("UserActivity", new { userActivities  = Model.UserActivities})
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @section Scripts {
+            <script>
+                function handleEditBio() {
+                    const bsCollapse = new bootstrap.Collapse('#bioCollapse', {
+                          toggle: false
+                        })
+                    bsCollapse.show();
+
+                    document.getElementById('bioDisplay').style.display = "none";
+                    document.getElementById('bioEditButton').style.display = "none";
+                    document.getElementById('bioEdit').style.display = "block";
+                }
+
+                function handlerCloseBio() {
+                    document.getElementById('bioEdit').style.display = "none";
+                    document.getElementById('bioDisplay').style.display = "block";
+                    document.getElementById('bioEditButton').style.display = "inline";
+                }
+
+                function handleProfilePictureClick() {
+                    document.getElementById('profileImageInput').click();
+                }
+
+                document.getElementById('profileImageInput').addEventListener('change', async (e) => {
+                    const file = e.target.files[0];
+
+                    if (file) {
+                        if(file.size > 5 * 1024 * 1024){
+                            alert('File size is greater than 5mb');
+                            return;
+                        }
+                    }
+
+                    const allowedTypes = ['image/jpeg', 'image/png']
+
+                    if(!allowedTypes.includes(file.type)){
+                        alert('Please enter a valid image type');
+                        return;
+                    }
+
+                    const formData = new FormData();
+                    formData.append('id', @Model.Id)
+                    formData.append('profilePicture', file);
+
+                try{
+                    const respone = await fetch('/Profile/UpdateProfilePicture', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                        }
+                    })
+
+                    if(respone.ok){
+                        console.log("Successfully uploaded the profile picture");
+                        alert("Image uploaded successfully");
+                        location.reload();
+                    }
+                    else{
+                        alert("an error occured");
+                    }
+
+                }
+                catch(error){
+                    console.log('Upload error', error);
+                    alert("an unexpected error occurred");
+                }
+                })
+
+
+            </script>
+        }
+</div>

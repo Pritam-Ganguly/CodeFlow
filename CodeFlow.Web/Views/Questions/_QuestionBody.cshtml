@@ -1,0 +1,22 @@
+﻿@model CodeFlow.Web.Models.QuestionViewModel
+
+
+<div class="col-10 pb-5">
+    <div class="question-body">
+        @Model.Body
+    </div>
+</div>
+<div class="row justify-content-start">
+    <div class="col-12 mt-2 mb-3">
+        @foreach (var tag in Model.Tags)
+        {
+            <span class="so-question-badge badge bg-light text-dark">@tag.Name</span>
+        }
+    </div>
+</div>
+<h6>
+    @Model.Comments.Count() @(Model.Comments.Count() > 1 ? "Comments" : "Comment")
+    <span id="toggle-comments-arrow" class="so-toggle-arrow" style="cursor:pointer;">
+        <i class="fa-solid fa-caret-down"></i>
+    </span>
+</h6>

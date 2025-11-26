@@ -1,4 +1,4 @@
-﻿@model CodeFlow.core.Models.Question
+﻿@model CodeFlow.Web.Models.CreateRequestModel
 @{
     ViewData["Title"] = "Ask a Question";
 }
@@ -21,9 +21,10 @@
         </div>
 
         <div class="form-group mb-3">
-            <label for="tagsInput" class="control-label">Tags</label>
-            <input type="text" name="tagsInput" class="form-control" placeholder="e.g., c#, aspnet-core, docker"/>
-            <small class="form-text text-muted">Add up to 5 tags separated by commas.</small>
+            <label asp-for="TagsInput" class="control-label">Tags</label>
+            <input type="text" asp-for="TagsInput" class="form-control" placeholder="e.g., c#, aspnet-core, docker"/>
+            <span asp-validation-for="TagsInput" class="text-danger"></span>
+            <small asp-validaton-for="" class="form-text text-muted">Add up to 5 tags separated by commas.</small>
         </div>
 
         <div class="form-group">

@@ -1,0 +1,37 @@
+﻿@model CodeFlow.Web.Models.QuestionViewModel
+
+<div>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <form asp-controller="Questions" asp-action="CommentOnQuestion" asp-route-id="@Model.Id" method="post" class="so-add-comment-form">
+            @Html.AntiForgeryToken()
+
+            <div class="form-group mb-1">
+                <textarea name="body" class="form-control so-comment-textarea" rows="3" placeholder="Add a comment"></textarea>
+                @if (ViewData.ModelState["questioncomment"]?.Errors.Count > 0)
+                {
+                    <span class="text-danger so-comment-error">@ViewData.ModelState["questioncomment"]?.Errors.First().ErrorMessage</span>
+                }
+                else if (ViewData.ModelState[string.Empty]?.Errors.Count > 0)
+                {
+                    <span class="text-danger so-comment-error">@ViewData.ModelState[string.Empty]?.Errors.First().ErrorMessage</span>
+                }
+            </div>
+            <div class="form-group d-inline">
+                <input class="btn btn-sm btn-outline-secondary so-comment-btn" type="submit" value="Add a Comment" />
+            </div>
+        </form>
+    }
+    else
+    {
+        <div class="mb-3">
+            <span>Please log in to comment on questions</span> - <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Context.Request.Path"> Login</a>
+        </div>
+    }
+</div>
+<div id="comments-section" class="so-comments-container" style="display: block">
+    @foreach (var comment in Model.Comments)
+    {
+        @await Html.PartialAsync("_Comment", comment)
+    }
+</div>

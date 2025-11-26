@@ -4,7 +4,10 @@
     @if (Model.User != null)
     {
         <span class="so-comment-user">
-            – <strong>@Model.User.DisplayName</strong>
+            – 
+            <a asp-controller="Profile" asp-action="UserProfile" asp-route-id="@Model.User?.Id">
+                <strong>@Model.User?.DisplayName</strong>
+            </a>
         </span>
     }
     <span class="so-comment-date">
