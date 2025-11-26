@@ -12,6 +12,6 @@ CREATE TABLE Comments (
   )
 );
 
-CREATE INDEX IX_Comments_UserId ON Commnets(UserId);
-CREATE INDEX IX_Comments_QuestionId ON Commnets(QuestionId);
-CREATE INDEX IX_Comments_AnswerId ON Commnets(AnswerId);
+CREATE INDEX IX_Comments_UserId ON Comments(UserId);
+CREATE INDEX IX_Comments_QuestionId ON Comments(QuestionId);
+CREATE INDEX IX_Comments_AnswerId ON Comments(AnswerId);

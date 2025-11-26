@@ -8,16 +8,16 @@ namespace CodeFlow.core.Repositories.Utils
         {
             return reputationTransactionTypes switch
             {
-                ReputationTransactionTypes.Question_Upvoted => "Upvoted question '{0}'",
-                ReputationTransactionTypes.Question_Downvoted => "Downvoted question '{{0}}'",
-                ReputationTransactionTypes.Answer_Upvoted => $"Upvoted an answer",
-                ReputationTransactionTypes.Answer_Downvoted => $"Downvoted an answer",
+                ReputationTransactionTypes.Question_Upvoted => "Upvote on question '{0}'",
+                ReputationTransactionTypes.Question_Downvoted => "Downvote on question '{0}'",
+                ReputationTransactionTypes.Answer_Upvoted => $"Upvote on an answer",
+                ReputationTransactionTypes.Answer_Downvoted => $"Downvote on an answer",
                 ReputationTransactionTypes.Downvote_On_Post =>
-                    relatedPostType == RelatedPostType.Question ? "You're question '{{0}}' got downvoted" : "One of You're answers got downvoted",
-                ReputationTransactionTypes.Answer_Accepted => "You're answer on question '{{0}}', got accepted",
-                ReputationTransactionTypes.First_Post => "Ask you're first questiosn '{{0}}'",
-                ReputationTransactionTypes.Post_Delete => "Downvoted question '{{0}}'",
-                ReputationTransactionTypes.Post_Got_Deleted => "Downvoted question '{{0}}'",
+                    relatedPostType == RelatedPostType.Question ? "Downvoted question '{0}'" : "Downvoted and answer",
+                ReputationTransactionTypes.Answer_Accepted => "You're answer on question '{0}', got accepted",
+                ReputationTransactionTypes.First_Post => "Ask you're first question",
+                ReputationTransactionTypes.Post_Delete => "Deleted a post",
+                ReputationTransactionTypes.Post_Got_Deleted => "One of you're post got deleted.",
                 _ => ""
             };
         }

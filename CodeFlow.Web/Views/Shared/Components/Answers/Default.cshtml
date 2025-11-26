@@ -51,6 +51,16 @@
                             </form>
                         }
                     }
+                    else
+                    {
+                        <a asp-controller="Profile" asp-action="UserProfile" asp-route-id="@User.FindFirst(ClaimTypes.NameIdentifier)?.Value">
+                            <div class="d-flex align-items-center justify-content-center rounded-circle" style="background-color: aliceblue; width: 50px; height: 50px; border: 1px solid grey">
+                                <img id="ProfileImage" style="width: 40px; height: 40px"
+                                     src="@Url.Action("ProfileImage", "Profile", new { id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value })"
+                                     class="rounded-circle" />
+                            </div>
+                        </a>
+                    }
                 </div>
                 <div class="col-10 answer-body">
                     <span id="answer-body-@answer.Id">@answer.Body</span>
@@ -82,7 +92,11 @@
                     </div>
                 }
                 <div class="col-md-7 offset-md-6 text-muted mt-2 justify-content-end so-postdate">
-                    Answered by <strong>@answer.User?.DisplayName</strong> on @answer.CreatedAt.ToString("MMM dd, yyyy")
+                    Answered by <strong>
+                        <a asp-controller="Profile" asp-action="UserProfile" asp-route-id="@answer.User.Id">
+                            <strong>@answer.User?.DisplayName</strong>
+                        </a>
+                    </strong> on @answer.CreatedAt.ToString("MMM dd, yyyy")
 
                     @if (answer.IsAccepted)
                     {
