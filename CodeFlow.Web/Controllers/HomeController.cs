@@ -18,29 +18,31 @@ public class HomeController : Controller
         _logger = logger;
     }
 
-    public async Task<IActionResult> Index(string search)
+    public async Task<IActionResult> Index(string search, int pageNumber = 1, int pageSize = 5, int sortType = 0)
     {
         IEnumerable<Question> questions;
         try
         {
-
             HomeViewModel model = new HomeViewModel();
             if (!string.IsNullOrWhiteSpace(search))
             {
                 _logger.LogInformation("Search query executed: {SearchQuery}", search);
-
-                questions = await _questionRepository.SearchAsync(search);
-
+                questions = await _questionRepository.SearchAsync(search, pageNumber, pageSize, (QuestionSortType)sortType);
                 ViewData["SearchQuery"] = search;
                 model.IsSearchResult = true;
                 model.SearchTerm = search;
+                model.TotalQuestion = await _questionRepository.GetAllResult(search);
             }
             else
             {
                 _logger.LogInformation("Fetching all questions");
-                questions = await _questionRepository.GetRecentWithTagsAsync();
+                questions = await _questionRepository.GetRecentWithTagsAsync(pageNumber, pageSize, (QuestionSortType)sortType);
+                model.TotalQuestion = await _questionRepository.GetAllQuestions();
             }
             model.Questions = questions;
+            model.PageNumber = pageNumber;
+            model.PageSize = pageSize;
+            model.SortType = sortType;
 
             _logger.LogInformation("Search completed succesfully");
 

@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "CodeFlow - Home Page";
     var searchQuery = ViewData["SearchQuery"] as string ?? string.Empty;
+    var totalPages = (Model.TotalQuestion / Model.PageSize) + ((Model.TotalQuestion % Model.PageSize == 0) ? 0 : 1);
 }
 
 <div class="container mt-4">
@@ -17,6 +18,18 @@
                 @:Search Results for: @Model.SearchTerm
             }
         </h3>
+        <div>
+            <form asp-action="Index" asp-asp-controller="Home" method="get">
+                <span>Sort By</span>
+                <select asp-for="SortType" class="s-pagination--item">
+                    <option value="0" selected="@(Model.SortType == 0)">Newest</option>
+                    <option value="1" selected="@(Model.SortType == 1)">Oldest</option>
+                    <option value="2" selected="@(Model.SortType == 2)">Score</option>
+                </select>
+                <input type="hidden" name="search" value="@Model.SearchTerm" />
+                <button class="s-pagination--item js-pagination-item primary-submit" type="submit">filter</button>
+            </form>
+        </div>
         @if (!User.Identity!.IsAuthenticated)
         {
             <a class="btn btn-primary" asp-controller="Account" asp-action="Login">Ask Question</a>
@@ -40,7 +53,7 @@
         {
             <div class="list-group-item list-group-item-action">
                 <div class="d-flex w-100 justify-content-between">
-                    <h5 class="mb-1">
+                    <h5 class="mb-2 w-75">
                         <a asp-controller="Questions" asp-action="details" asp-route-id="@question.Id" class="text-decoration-none">
                             @question.Title
                         </a>
@@ -51,7 +64,7 @@
                 <div class="mt-2">
                     @foreach(var tag in question.Tags)
                     {
-                        <span class="badge bg-secondary me-1">@tag.Name</span>
+                        <span class="badge bg-secondary-subtle p-1 mt-1 mb-2 text-dark">@tag.Name</span>
                     }
                 </div>
                 <small class="text-muted">
@@ -60,4 +73,136 @@
             </div>
         }
     </div>
+    <div class="row">
+        <div class="col-8 s-pagination">
+            @await Html.PartialAsync("_Pagination", new PaginationViewModel
+            {
+                        PageIndex = Model.PageNumber,
+                        PageSize = Model.PageSize,
+                        TotalPages = totalPages,
+                        SearchTerm = Model.SearchTerm,
+                        SortType = Model.SortType
+                        })
+        </div>
+        <div class="col-4 s-pagination">
+            <form asp-controller="Home" asp-action="index"
+                  method="get"
+                  aria-label="Update page size"
+                  title="Update Page Size">
+                <span class="s-pagination--item">Page size > </span>
+                <select asp-for="PageSize" class="s-pagination--item">
+                    <option value="5" selected="@(Model.PageSize == 5)">5</option>
+                    <option value="10" selected="@(Model.PageSize == 10)">10</option>
+                    <option value="20" selected="@(Model.PageSize == 20)">20</option>
+                </select>
+                <input type="hidden" name="search" value="@Model.SearchTerm" />
+                <input type="hidden" name="sorttype" value="@Model.SortType" />
+                <button class="s-pagination--item js-pagination-item primary-submit" type="submit">submit</button>
+            </form>
+        </div>
+    </div>
 </div>
+
+
+@section Styles {
+    <style>
+        .s-pagination {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .s-pagination--item {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+            height: 32px;
+            padding: 0 8px;
+            border: 1px solid #d6d9dc;
+            border-radius: 4px;
+            background-color: #ffffff;
+            color: #3c4146;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 400;
+            line-height: 1;
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+            position: relative;
+        }
+
+            .s-pagination--item:hover {
+                background-color: #f8f9f9;
+                border-color: #babfc4;
+                color: #0c0d0e;
+                text-decoration: none;
+            }
+
+            .s-pagination--item:focus {
+                outline: none;
+                box-shadow: 0 0 0 4px rgba(0, 149, 255, 0.15);
+                border-color: #f48225;
+            }
+
+            .s-pagination--item.is-selected {
+                background-color: #f48225;
+                border-color: #f48225;
+                color: #ffffff;
+                font-weight: 700;
+                pointer-events: none;
+            }
+
+            .s-pagination--item.primary-submit {
+                background-color: #f48225;
+                border-color: #f48225;
+                color: #ffffff;
+                font-weight: 700;
+            }
+
+                .s-pagination--item.primary-submit:hover {
+                    background-color: #f48225;
+                    border-color: #ffd6b3;
+                    color: #ffffff;
+                    font-weight: 700;
+                }
+
+            .s-pagination--item.is-disabled {
+                background-color: #f8f9f9;
+                border-color: #d6d9dc;
+                color: #6a737c;
+                cursor: not-allowed;
+                pointer-events: none;
+            }
+
+        .s-pagination--item-icon {
+            font-size: 16px;
+            line-height: 1;
+            margin: 0 2px;
+        }
+
+        .s-pagination--item__clear {
+            border: none;
+            background: transparent;
+            pointer-events: none;
+            min-width: auto;
+            padding: 0 4px;
+        }
+
+        .s-pagination--item-icon {
+            font-size: 14px;
+        }
+
+        .pagination-summary {
+            color: #6a737c;
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+
+            .pagination-summary strong {
+                color: #0c0d0e;
+            }
+    </style>
+}

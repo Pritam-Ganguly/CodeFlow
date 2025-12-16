@@ -160,7 +160,7 @@
                         <li class="nav-item" role="presentation">
                             <button class="nav-link active" id="questions-tab" data-bs-toggle="tab"
                                     data-bs-target="#questions" type="button" role="tab">
-                                Questions (@Model.Questions.Count())
+                                Questions
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
@@ -195,23 +195,33 @@
                                         </span>
                                     </p>
                                 </div>
-                                foreach (var question in Model.Questions)
-                                {
-                                    <a asp-controller="Questions" asp-action="Details" asp-route-id="@question.Id">
-                                        <div class="activity-item mb-1 pb-1 border-bottom">
-                                            <p class="row mb-2 text-muted small">
-                                                <span class=" col-1 p-1 fw-bold" style="color: orange">@question.Score</span>
-                                                <span class=" col-8 p-1">
-                                                    @question.Title
-                                                </span>
-                                                <span class="col-3 p-1">
-                                                    @question.CreatedAt
-                                                </span>
-                                            </p>
-
-                                        </div>
-                                    </a>
-                                }
+                                <div id="questionsList">
+                                    @foreach (var question in Model.Questions)
+                                    {
+                                        <a asp-controller="Questions" asp-action="Details" asp-route-id="@question.Id">
+                                            <div class="activity-item mb-1 pb-1 border-bottom">
+                                                <p class="row mb-2 text-muted small">
+                                                    <span class=" col-1 p-1 fw-bold" style="color: orange">@question.Score</span>
+                                                    <span class=" col-8 p-1">
+                                                        @question.Title
+                                                    </span>
+                                                    <span class="col-3 p-1">
+                                                        @question.CreatedAt
+                                                    </span>
+                                                </p>
+                                            </div>
+                                        </a>
+                                    }
+                                </div>
+                                <div class="mt-3 text-center">
+                                    <button id="loadMoreQuestions"
+                                            class="btn btn-outline-primary"
+                                            data-page-size="5"
+                                            data-page-number="1"
+                                            data-user-id="@Model.Id">
+                                        Load More
+                                    </button>
+                                </div>
                             }
                             else
                             {
@@ -318,6 +328,62 @@
                 }
                 })
 
+                document.getElementById("loadMoreQuestions").addEventListener("click", async (e) => {
+                    const btn = e.currentTarget;
+                    let pageNumber = parseInt(btn.dataset.pageNumber, 10) + 1;
+                    const pageSize = parseInt(btn.dataset.pageSize, 10);
+                    const userId = btn.dataset.userId;
+
+                    try
+                    {
+                        const res = await fetch(`/Profile/UserQuestions?id=${userId}&page=${pageNumber}&pageSize=${pageSize}`, {
+                            method: 'GET',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
+                        
+                        if(res.status == 204){
+                            btn.style.display = 'none';
+                            return;
+                        }
+
+                        if(!res.ok){
+                            console.error("Error occured while loading more questions", e);
+                            alert("An unexpected error occured");
+                            return;
+                        }
+
+                        const html = await res.text();
+                        if(!html.trim()){
+                            btn.style.display = 'none';
+                            return;
+                        }
+
+                        const container = document.getElementById("questionsList");
+                        const temp = document.createElement('div');
+                        temp.innerHTML = html;
+                        if(temp){
+                            container.appendChild(temp);
+                        }
+
+                        btn.dataset.pageNumber = pageNumber;
+
+                        const appendedItems = html.match(/activity-item/g) || [];
+                        if(appendedItems.length < pageSize){
+                            btn.style.display = 'none';
+                        }
+                        else{
+                            btn.style.display = 'block';
+                        }
+                    }
+                    catch(e)
+                    {
+                        console.error("Error occured while loading more questions", e);
+                        alert("An unexpected error occured");
+                    }
+
+                })
 
             </script>
         }

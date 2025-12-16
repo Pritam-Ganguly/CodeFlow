@@ -9,6 +9,10 @@ namespace CodeFlow.Web.Models
         public bool IsSearchResult { get; set; }
         public bool HasError { get; set; }
         public string ErrorMessage { get; set; } = string.Empty;
+        public int PageNumber { get; set; }
+        public int PageSize { get; set; }
+        public int TotalQuestion { get; set; }
+        public int SortType { get; set; } = 0;
 
     }
 }

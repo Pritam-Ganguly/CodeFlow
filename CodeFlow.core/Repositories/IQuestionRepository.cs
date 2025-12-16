@@ -5,12 +5,14 @@ namespace CodeFlow.core.Repositories
     public interface IQuestionRepository
     {
         Task<Question?> GetByIdAsync(int id);
-        Task<IEnumerable<Question>> GetRecentAsync(int limit = 20);
+        Task<IEnumerable<Question>> GetRecentAsync(int pageNumber = 1, int pageSize = 10, QuestionSortType sortBy = QuestionSortType.Newest);
         Task<int> CreateAsync(Question question);
         Task<Question?> GetByIdWithTagsAsync(int id);
-        Task<IEnumerable<Question>> SearchAsync(string searchQuery);
-        Task<IEnumerable<Question>> GetRecentWithTagsAsync(int limit = 20);
-        Task<IEnumerable<Question>> GetAllQuestionsByUserId(int userId);
+        Task<int> GetAllResult(string searchQuery);
+        Task<int> GetAllQuestions();
+        Task<IEnumerable<Question>> SearchAsync(string searchQuery, int pageNumber = 1, int pageSize = 10, QuestionSortType sortType = QuestionSortType.Newest);
+        Task<IEnumerable<Question>> GetRecentWithTagsAsync(int pageNumber = 1, int pageSize = 10, QuestionSortType sortType = QuestionSortType.Newest);
+        Task<IEnumerable<Question>> GetAllQuestionsByUserId(int userId, int pageNumber = 1, int pageSize = 5);
         Task<int?> CurrentVoteAsync(int userId, int quesitonId);
         Task<int?> CurrentVoteForAnswerItemAsync(int userId, int answerId);
         Task<int> UpdateQuestionAsync(int questionId, string newTitle, string newBody);

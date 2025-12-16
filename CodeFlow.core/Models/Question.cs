@@ -13,4 +13,11 @@
         public User? User { get; set; }
         public List<Tag> Tags { get; set; } = new List<Tag>();
     }
+
+    public enum QuestionSortType
+    {
+        Newest = 0,
+        Oldest = 1,
+        Score = 2
+    }
 }

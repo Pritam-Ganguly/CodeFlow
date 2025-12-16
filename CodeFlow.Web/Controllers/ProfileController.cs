@@ -120,6 +120,26 @@ namespace CodeFlow.Web.Controllers
             }
         }
 
+        [LogAction]
+        public async Task<IActionResult> UserQuestions(int id, int page = 1, int pageSize = 5)
+        {
+            _logger.LogInformation("Load more questions requested for {userId} for page {page} with pageSize {pageSize}", id, page, pageSize);
+            try
+            {
+                var questions = await _questionRepository.GetAllQuestionsByUserId(id, page, pageSize);
+                if (questions.Any())
+                {
+                    return PartialView("_UserProfileQuestions", questions);
+                }
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error occured");
+                return BadRequest();
+            }
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         [LogAction]

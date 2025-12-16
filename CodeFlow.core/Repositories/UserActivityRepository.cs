@@ -29,7 +29,7 @@ namespace CodeFlow.core.Repositories
         public async Task<IEnumerable<UserActivity>> GetUserActivitiesAsync(int userId)
         {
             using var connection = await _dbConnectionFactory.CreateConnectionAsync();
-            var sql = @"SELECT * FROM UserActivities WHERE UserId = @UserId ORDER BY CreatedAt DESC;";
+            var sql = @"SELECT * FROM UserActivities WHERE UserId = @UserId ORDER BY CreatedAt DESC LIMIT 20;";
             return await connection.QueryAsync<UserActivity>(sql, new { UserId = userId });
         }
     }

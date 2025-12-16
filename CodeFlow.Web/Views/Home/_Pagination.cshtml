@@ -1,0 +1,47 @@
+﻿@model CodeFlow.Web.Models.PaginationViewModel
+
+@if (Model.TotalPages > 1)
+{
+    <div>
+        @if (Model.HasPrevious)
+        {
+            <a asp-controller="Home" asp-action="index"  asp-route-sorttype="@Model.SortType" asp-route-search="@Model.SearchTerm" asp-route-pagenumber="@(Model.PageIndex - 1)" asp-route-pagesize="@Model.PageSize" class="s-pagination--item js-pagination-item"
+               aria-label="Go to page @(Model.PageIndex - 1)"
+               title="Go to page @(Model.PageIndex - 1)">
+                <span class="s-pagination--item-icon">‹</span> Prev
+            </a>
+        }
+
+        @foreach (var index in Model.Pages)
+        {
+            if (index == -1)
+            {
+                <span class="s-pagination--item s-pagination--item__clear">…</span>
+            }
+            else if (index == Model.PageIndex)
+            {
+                <span class="s-pagination--item is-selected" 
+                      aria-current="page">
+                      @index
+                </span>
+            }
+            else
+            {
+                <a asp-controller="Home" asp-action="index" asp-route-sorttype="@Model.SortType"  asp-route-search="@Model.SearchTerm" asp-route-pagenumber="@index" asp-route-pagesize="@Model.PageSize" class="s-pagination--item js-pagination-item"
+                   aria-label="Go to page @index"
+                   title="Go to page @index">
+                    @index
+                </a>
+            }
+        }
+
+        @if (Model.HasNext)
+        {
+            <a asp-controller="Home" asp-action="index" asp-route-sorttype="@Model.SortType"  asp-route-search="@Model.SearchTerm" asp-route-pagenumber="@(Model.PageIndex + 1)" asp-route-pagesize="@Model.PageSize" class="s-pagination--item js-pagination-item"
+               aria-label="Go to page @(Model.PageIndex + 1)"
+               title="Go to page @(Model.PageIndex + 1)">
+                Next <span class="s-pagination--item-icon">›</span>
+            </a>
+        }
+    </div>
+}

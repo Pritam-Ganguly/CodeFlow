@@ -6,7 +6,7 @@ namespace CodeFlow.Web.Components
 {
     public class UserActivityViewComponent : ViewComponent
     {
-        public async Task<IViewComponentResult> InvokeAsync(IEnumerable<UserActivity> userActivities)
+        public IViewComponentResult Invoke(IEnumerable<UserActivity> userActivities)
         {
             IList<UserActivityViewComponentModel> userActivityViewComponentModel = new List<UserActivityViewComponentModel>();
 
@@ -14,7 +14,8 @@ namespace CodeFlow.Web.Components
             {
                 StringBuilder st = new StringBuilder();
 
-                st.Append(activity.ActivityType switch {
+                st.Append(activity.ActivityType switch
+                {
                     ActivityType.question_asked => "Asked a question",
                     ActivityType.answer_posted => "Added an answer",
                     ActivityType.answer_accepted => "Accepted an answer",

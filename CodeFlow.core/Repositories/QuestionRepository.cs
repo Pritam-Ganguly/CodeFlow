@@ -158,34 +158,57 @@ namespace CodeFlow.core.Repositories
         /// <summary>
         /// Returns recent questions ordered by created date descending.
         /// </summary>
-        public async Task<IEnumerable<Question>> GetRecentAsync(int limit = 20)
+        public async Task<IEnumerable<Question>> GetRecentAsync(int pageNumber = 1, int pageSize = 10, QuestionSortType sortBy = QuestionSortType.Newest)
         {
-            _logger.LogDebug("GetRecentAsync called with limit={Limit}", limit);
+            _logger.LogDebug("GetRecentAsync called with limit={Limit}", pageSize);
             try
             {
                 var sql = @"
-            SELECT q.*, u.*
-            FROM Questions q
-            INNER JOIN Users u ON q.UserId = u.Id
-            ORDER BY q.CreatedAt DESC
-            LIMIT @Limit";
+                SELECT q.*, u.*
+                FROM Questions q
+                INNER JOIN Users u ON q.UserId = u.Id";
 
+                sql += sortBy switch
+                {
+                    QuestionSortType.Oldest => @" ORDER BY q.CreatedAt",
+                    QuestionSortType.Score => @" ORDER BY q.Score",
+                    _ => @" ORDER BY q.CreatedAt DESC"
+                };
+
+                sql += @" LIMIT @PageSize OFFSET @Offset";
+
+                var offset = (pageNumber = 1) * pageSize;
                 using var connection = await _connectionFactory.CreateConnectionAsync();
                 var results = await connection.QueryAsync<Question, User, Question>(sql, map: (question, user) =>
                 {
                     question.User = user;
                     return question;
                 },
-                param: new { Limit = limit },
+                param: new { PageSize = pageSize, Offset = offset},
                 splitOn: "Id");
 
                 var count = results?.Count() ?? 0;
-                _logger.LogInformation("GetRecentAsync returned {Count} questions (limit {Limit})", count, limit);
+                _logger.LogInformation("GetRecentAsync returned {Count} questions (limit {Limit})", count, pageSize);
                 return results ?? [];
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get recent questions (limit={Limit})", limit);
+                _logger.LogError(ex, "Failed to get recent questions (limit={Limit})", pageSize);
+                throw;
+            }
+        }
+
+        public async Task<int> GetAllQuestions()
+        {
+            try
+            {
+                using var connection = await _connectionFactory.CreateConnectionAsync();
+                var sql = @"SELECT COUNT(*) FROM Questions";
+                return await connection.ExecuteScalarAsync<int>(sql);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get questions count");
                 throw;
             }
         }
@@ -193,14 +216,24 @@ namespace CodeFlow.core.Repositories
         /// <summary>
         /// Returns recent questions with their tags.
         /// </summary>
-        public async Task<IEnumerable<Question>> GetRecentWithTagsAsync(int limit = 20)
+        public async Task<IEnumerable<Question>> GetRecentWithTagsAsync(int pageNumber = 1, int pageSize = 10, QuestionSortType sortType = QuestionSortType.Newest)
         {
-            _logger.LogDebug("GetRecentWithTagsAsync called with limit={Limit}", limit);
+            _logger.LogDebug("GetRecentWithTagsAsync called with limit={limit}", pageSize);
             try
             {
+                var offset = (pageNumber - 1) * pageSize;
                 using var connection = await _connectionFactory.CreateConnectionAsync();
 
-                var sql = @" SELECT q.*, u.* FROM Questions q INNER JOIN Users u ON q.UserId = u.Id ORDER BY q.CreatedAt DESC LIMIT @Limit";
+                var sql = @"SELECT q.*, u.* FROM Questions q INNER JOIN Users u ON q.UserId = u.Id";
+
+                sql += sortType switch
+                {
+                    QuestionSortType.Oldest => " ORDER BY q.CreatedAt",
+                    QuestionSortType.Score => " ORDER BY q.Score",
+                    _ => " ORDER BY q.CreatedAt DESC"
+                };
+
+                sql += " LIMIT @PageSize OFFSET @Offset";
 
                 var questions = await connection.QueryAsync<Question, User, Question>(
                     sql,
@@ -209,7 +242,10 @@ namespace CodeFlow.core.Repositories
                         question.User = user;
                         return question;
                     },
-                    param: new { Limit = limit },
+                    param: new {
+                        PageSize = pageSize,
+                        Offset = offset
+                    },
                     splitOn: "Id,Id"
                 );
 
@@ -239,12 +275,33 @@ namespace CodeFlow.core.Repositories
                     }
                 }
 
-                _logger.LogInformation("GetRecentWithTagsAsync returning {Count} questions (limit {Limit})", questions.Count(), limit);
+                _logger.LogInformation("GetRecentWithTagsAsync returning {Count} questions (limit {Limit})", questions.Count(), pageSize);
                 return questions;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get recent questions with tags (limit={Limit})", limit);
+                _logger.LogError(ex, "Failed to get recent questions with tags (limit={Limit})", pageSize);
+                throw;
+            }
+        }
+
+        public async Task<int> GetAllResult(string searchQuery)
+        {
+            try
+            {
+                using var connection = await _connectionFactory.CreateConnectionAsync();
+                var sql = @"
+                SELECT COUNT(*) FROM Questions
+                WHERE SearchVector @@ plainto_tsquery('english', @SearchQuery)";
+                return await connection.ExecuteScalarAsync<int>(sql, new
+                {
+                    SearchQuery = searchQuery
+                });
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get result count");
                 throw;
             }
         }
@@ -252,7 +309,7 @@ namespace CodeFlow.core.Repositories
         /// <summary>
         /// Searches questions using full text search; returns recent questions if query is empty.
         /// </summary>
-        public async Task<IEnumerable<Question>> SearchAsync(string searchQuery)
+        public async Task<IEnumerable<Question>> SearchAsync(string searchQuery, int pageNumber = 1, int pageSize = 10, QuestionSortType sortType = QuestionSortType.Newest)
         {
             _logger.LogDebug("SearchAsync called with query='{SearchQuery}'", searchQuery);
             try
@@ -260,12 +317,24 @@ namespace CodeFlow.core.Repositories
                 if (string.IsNullOrWhiteSpace(searchQuery))
                 {
                     _logger.LogInformation("SearchAsync empty query - returning recent questions");
-                    return await GetRecentAsync();
+                    return await GetRecentAsync(pageNumber, pageSize, sortType);
                 }
 
+                var offset = (pageNumber - 1) * pageSize;
                 using var connection = await _connectionFactory.CreateConnectionAsync();
                 var sql = @"SELECT q.*, u.* FROM Questions q INNER JOIN Users u ON q.UserId = u.Id WHERE q.SearchVector @@ plainto_tsquery('english', @SearchQuery)
-                        ORDER BY ts_rank(q.SearchVector, plainto_tsquery('english', @SearchQuery)) DESC, q.CreatedAt DESC";
+                        ORDER BY ts_rank(q.SearchVector, plainto_tsquery('english', @SearchQuery)) DESC,";
+
+                sql += sortType switch
+                {
+                    QuestionSortType.Oldest => " q.CreatedAt",
+                    QuestionSortType.Score => " q.Score",
+                    _ => " q.CreatedAt DESC"
+                };
+
+                sql += @" LIMIT @PageSize OFFSET @Offset";
+
+                Console.WriteLine(sql);
 
                 var results = await connection.QueryAsync<Question, User, Question>(
                     sql,
@@ -274,7 +343,7 @@ namespace CodeFlow.core.Repositories
                         question.User = user;
                         return question;
                     },
-                    param: new { SearchQuery = searchQuery },
+                    param: new { SearchQuery = searchQuery, PageSize = pageSize, Offset = offset },
                     splitOn: "Id");
 
                 _logger.LogInformation("SearchAsync returned {Count} results for query='{SearchQuery}'", results.Count(), searchQuery);
@@ -290,16 +359,23 @@ namespace CodeFlow.core.Repositories
         /// <summary>
         /// Gets all questions for a given user.
         /// </summary>
-        public async Task<IEnumerable<Question>> GetAllQuestionsByUserId(int userId)
+        public async Task<IEnumerable<Question>> GetAllQuestionsByUserId(int userId, int pageNumber = 1, int pageSize = 5)
         {
             _logger.LogDebug("GetAllQuestionsByUserId called for UserId={UserId}", userId);
             try
             {
+                int offset = (pageNumber - 1) * pageSize;
                 using var connection = await _connectionFactory.CreateConnectionAsync();
-                var sql = @"SELECT q.* FROM Questions q INNER JOIN Users u ON q.UserId = u.Id WHERE q.UserId = @UserId ORDER BY q.CreatedAt DESC";
+                var sql = @"SELECT q.* FROM Questions q 
+                            INNER JOIN Users u ON q.UserId = u.Id
+                            WHERE q.UserId = @UserId 
+                            ORDER BY q.CreatedAt DESC
+                            LIMIT @PageSize OFFSET @Offset;";
                 var results = await connection.QueryAsync<Question>(sql, param: new
                 {
-                    UserId = userId
+                    UserId = userId,
+                    PageSize = pageSize,
+                    Offset = offset
                 });
 
                 _logger.LogInformation("GetAllQuestionsByUserId returned {Count} questions for UserId={UserId}", results.Count(), userId);

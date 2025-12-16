@@ -5,7 +5,7 @@ namespace CodeFlow.Web.Components
 {
     public class AnswersViewComponent : ViewComponent
     {
-        public async Task<IViewComponentResult> InvokeAsync(IEnumerable<AnswerViewModel> answers, bool isAuthor)
+        public IViewComponentResult Invoke(IEnumerable<AnswerViewModel> answers, bool isAuthor)
         {
             var orderedAnswers = answers.OrderByDescending(a => a.IsAccepted).OrderByDescending(a => a.CreatedAt);
 
