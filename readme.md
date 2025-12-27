@@ -50,11 +50,11 @@ docker exec -it codeflow_db psql -U codeflow_user -d codeflow
   - ✅ Add filtering logic 
   - ✅ Add pagination for sub lists
   
-- [ ] **Rich Text Editing**
-  - [ ] Integrate Markdown editor (e.g., EasyMDE, SimpleMDE)
-  - [ ] Syntax highlighting for code blocks
-  - [ ] Preview functionality
-  - [ ] XSS protection and input sanitization
+- ✅ **Rich Text Editing**
+  - ✅ Integrate Markdown editor (e.g., EasyMDE, SimpleMDE)
+  - ✅ Syntax highlighting for code blocks
+  - ✅ Preview functionality
+  - ✅ XSS protection and input sanitization
 
 - [ ] **Mobile Responsiveness**
   - [ ] Optimize for mobile devices
@@ -125,3 +125,13 @@ docker exec -it codeflow_db psql -U codeflow_user -d codeflow
   - [ ] Search by user
   - [ ] Saved searches
 ---
+
+BUGS: 
+
+- Fix empty profile image error
+- Fix button styles in answer view
+- Clean up resources job for unused description images
+
+
+
+

@@ -3,6 +3,7 @@ using CodeFlow.core.Models;
 using Dapper;
 using CodeFlow.core.Models.Mapping;
 using Microsoft.Extensions.Logging;
+using CodeFlow.core.Servies;
 
 namespace CodeFlow.core.Repositories
 {
@@ -16,14 +17,19 @@ namespace CodeFlow.core.Repositories
         private readonly IDbConnectionFactory _connectionFactory;
         private readonly IReputationRepository _reputationRepository;
         private readonly IUserActivityRepository _userActivityRepository;
+        private readonly IMarkdownService _markDownServices;
         private readonly ILogger<QuestionRepository> _logger;
 
-        public QuestionRepository(IDbConnectionFactory connectionFactory, IReputationRepository reputationRepository, IUserActivityRepository userActivityRepository,
+        public QuestionRepository(IDbConnectionFactory connectionFactory,
+            IReputationRepository reputationRepository,
+            IUserActivityRepository userActivityRepository,
+            IMarkdownService markDownServices,
             ILogger<QuestionRepository> logger)
         {
             _connectionFactory = connectionFactory;
             _reputationRepository = reputationRepository;
             _userActivityRepository = userActivityRepository;
+            _markDownServices = markDownServices;
             _logger = logger;
         }
 
@@ -36,11 +42,14 @@ namespace CodeFlow.core.Repositories
             _logger.LogDebug("CreateAsync called for UserId={UserId}, Title={Title}", question.UserId, question.Title);
             try
             {
+                var html = _markDownServices.ToHTML(question.BodyMarkdown);
+                question.BodyHtml = html;
+
                 using var connection = await _connectionFactory.CreateConnectionAsync();
                 var sql = @"
-            INSERT INTO Questions (Title, Body, UserId)
-            VALUES (@Title, @Body, @UserId)
-            RETURNING Id;";
+                INSERT INTO Questions (Title, BodyMarkDown, BodyHTML, UserId)
+                VALUES (@Title, @BodyMarkDown, @BodyHTML, @UserId)
+                RETURNING Id;";
                 var isFirstPost = await FirstPost(question.UserId);
                 var newId = await connection.ExecuteScalarAsync<int>(sql, question);
                 _logger.LogInformation("Question created with Id={QuestionId} for UserId={UserId}", newId, question.UserId);
@@ -441,19 +450,21 @@ namespace CodeFlow.core.Repositories
         /// <summary>
         /// Updates a question's title and body. Returns number of affected rows.
         /// </summary>
-        public async Task<int> UpdateQuestionAsync(int questionId, string newTitle, string newBody)
+        public async Task<int> UpdateQuestionAsync(int questionId, string newTitle, string newBodyMarkdown)
         {
             _logger.LogDebug("UpdateQuestionAsync called for QuestionId={QuestionId}", questionId);
             try
             {
+                var html = _markDownServices.ToHTML(newBodyMarkdown);
                 using var connection = await _connectionFactory.CreateConnectionAsync();
                 Question? question = await GetByIdWithTagsAsync(questionId);
-                var sql = @"UPDATE Questions SET Title = @Title, Body = @Body WHERE Questions.Id = @Id";
+                var sql = @"UPDATE Questions SET Title = @Title, BodyMarkDown = @BodyMarkDown, BodyHTML = @BodyHTML WHERE Questions.Id = @Id";
 
                 var affected = await connection.ExecuteAsync(sql, new
                 {
                     Title = newTitle,
-                    Body = newBody,
+                    BodyMarkDown = newBodyMarkdown,
+                    BodyHTML = html,
                     Id = questionId
                 });
 

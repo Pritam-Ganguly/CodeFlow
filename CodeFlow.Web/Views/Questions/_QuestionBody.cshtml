@@ -3,7 +3,7 @@
 
 <div class="col-10 pb-5">
     <div class="question-body">
-        @Model.Body
+        @Html.Raw(Model.BodyHtml)
     </div>
 </div>
 <div class="row justify-content-start">

@@ -5,7 +5,8 @@ namespace CodeFlow.Web.Models
     public class AnswerViewModel
     {
         public int Id { get; set; }
-        public string Body { get; set; } = string.Empty;
+        public string BodyMarkdown { get; set; } = string.Empty;
+        public string BodyHtml { get; set; } = string.Empty;
         public int Score { get; set; }
         public bool IsAccepted { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -21,7 +22,8 @@ namespace CodeFlow.Web.Models
         public AnswerViewModel(Answer answer)
         {
             Id = answer.Id;
-            Body = answer.Body;
+            BodyMarkdown = answer.BodyMarkdown;
+            BodyHtml = answer.BodyHtml;
             Score = answer.Score;
             IsAccepted = answer.IsAccepted;
             CreatedAt = answer.CreatedAt;

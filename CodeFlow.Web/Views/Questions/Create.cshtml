@@ -4,27 +4,29 @@
 }
 
 <div class="container mt-4">
-    <h1>Ask a question</h1>
+    <div class="fw-semibold fs-2 p-2">Ask a question</div>
     <form asp-action="Create">
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
         <div class="form-group mb-3">
-            <label asp-for="Title" class="control-lable"></label>
+            <label asp-for="Title" class="control-lable fs-5 fw-bold p-2"></label>
             <input asp-for="Title" class="form-control" placeholder="e.g., Why is the sky blue?"/>
             <span asp-validation-for="Title" class="text-danger"></span>
         </div>
 
         <div class="form-group mb-3">
-            <label asp-for="Body" class="control-lable"></label>
-            <textarea asp-for="Body" class="form-control" rows="10" placeholder="Describe your problem in detail..."></textarea>
-            <span asp-validation-for="Body" class="text-danger"></span>
+            <label asp-for="BodyMarkDown" class="control-lable fs-5 fw-bold p-2">Description</label>
+            <div class="codeflow-editor">
+                <textarea asp-for="BodyMarkDown" class="form-control" rows="10" id="QuestionBodyEditor"></textarea>
+            </div>
+            <span asp-validation-for="BodyMarkDown" class="text-danger"></span>
         </div>
 
         <div class="form-group mb-3">
-            <label asp-for="TagsInput" class="control-label">Tags</label>
+            <label asp-for="TagsInput" class="control-label fs-5 fw-bold p-2">Tags</label>
             <input type="text" asp-for="TagsInput" class="form-control" placeholder="e.g., c#, aspnet-core, docker"/>
             <span asp-validation-for="TagsInput" class="text-danger"></span>
-            <small asp-validaton-for="" class="form-text text-muted">Add up to 5 tags separated by commas.</small>
+            <small asp-validaton-for="" class="form-text text-muted p-2">Add up to 5 tags separated by commas.</small>
         </div>
 
         <div class="form-group">
@@ -38,4 +40,127 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <script>
+        const textAreaId = "QuestionBodyEditor";
+        const options = {
+            autofocus: false,
+            autosave: {
+                enabled: true,
+                uniqueId: textAreaId,
+                delay: 1000,
+                text: "Autosaved: "
+            },
+            blockStyles: {
+                italic: "_",
+            },
+            unorderedListStyle: "-",
+            element: document.getElementById(textAreaId),
+            forceSync: true,
+            hideIcons: ["guide", "fullsceen", "side-by-side"],
+            indentWithTabs: false,
+            uploadImage: true,
+            imageUploadFunction: function(file, onSuccess, onError) {
+                const formData = new FormData();
+                formData.append("file", file);
+
+                const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+                fetch('/upload/uploadimage', {
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': token
+                    },
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => { throw new Error(err.error || 'Upload failed'); });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    onSuccess(data.data.filePath);
+                })
+                .catch(error => {
+                    onError(error.message);
+                    console.error('Image upload error:', error);
+                });
+            },
+            insertTexts: {
+                horizontalRule: ["", "\n\n-----\n\n"],
+                image: ["![](", ")"],
+                link: ["[", "](https://)"],
+                table: ["", "\n\n| Column 1 | Column 2 | Column 3 |\n| -------- | -------- | -------- |\n| Text     | Text      | Text     |\n\n"],
+            },
+            minHeight: "300px",
+            parsingConfig: {
+                allowAtxHeaderWithoutSpace: true,
+                strikethrough: false,
+                underscoresBreakWords: true,
+            },
+            placeholder: "Describe your problem in detail (Markdown supported..)",
+            previewRender: (plainText, preview) => { // Async method
+                setTimeout(() => {
+                    const formData = new FormData();
+                    formData.append("markdown", plainText);
+
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+                    result = fetch(`/questions/RenderMarkDownPreview`, {
+                        method: 'POST',
+                        headers: {
+                            "RequestVerificationToken": token
+                        },
+                        body: formData
+                    })
+                    .then(response => {
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log(data.data);
+                        preview.innerHTML = data.data;
+                        return data.data;
+                    })
+                    .catch(error => {
+                        console.error('Markdown preview error: ', error);
+                    })
+
+                }, 2000);
+
+                return "Parsing Markdown...";
+            },
+            renderingConfig: {
+                singleLineBreaks: false,
+                codeSyntaxHighlighting: true,
+            },
+            shortcuts: {
+                    drawTable: "Cmd-Alt-T",
+                    toggleOrderedList: "Cmd-Alt-O",
+                    toggleUnorderedList: "Cmd-Alt-U",
+                    toggleCodeBlock: "Cmd-Alt-C",
+                    toggleHeadingSmaller: "Cmd-Alt-H",
+                    cleanBlock: "Cmd-Alt-E",
+            },
+            showIcons: ["code", "table", "horizontal-rule", "heading", "heading-bigger", "heading-smaller"],
+            spellChecker: false,
+            status: false,
+            status: ["autosave", "lines", "words", "cursor"], 
+            styleSelectedText: false,
+            sideBySideFullscreen: false,
+            syncSideBySidePreviewScroll: false,
+            tabSize: 4,
+            toolbar: [
+                    "bold", "italic", "heading", "|",
+                    "code", "quote", "unordered-list", "ordered-list", "|",
+                    "link", "image", "horizontal-rule", "|",
+                    "preview", "side-by-side", "fullscreen", "table"
+                ],
+            toolbarTips: true,
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const easyMDE = new EasyMDE(options);
+        })
+    </script>
 }

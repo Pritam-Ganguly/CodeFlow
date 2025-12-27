@@ -2,6 +2,7 @@
 using CodeFlow.core.Repositories;
 using CodeFlow.core.Repositories.AuthServices;
 using CodeFlow.core.Repositories.Seed;
+using CodeFlow.core.Servies;
 
 namespace CodeFlow.Web.Extensions
 {
@@ -22,6 +23,7 @@ namespace CodeFlow.Web.Extensions
             services.AddScoped<IAuthServices, AuthServices>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<BadgeDataSeed>();
+            services.AddScoped<IMarkdownService, MarkdownService>();
 
             return services;
         }

@@ -60,7 +60,7 @@
                     </h5>
                     <small class="text-muted">@question.Score votes</small>
                 </div>
-                <p class="mb-1">@(question.Body.Length > 150 ? question.Body.Substring(0,150) + "...": question.Body)</p>
+                <p class="mb-1">@(question.BodyMarkdown?.Length > 150 ? question.BodyMarkdown.Substring(0, 150) + "..." : question.Body)</p>
                 <div class="mt-2">
                     @foreach(var tag in question.Tags)
                     {

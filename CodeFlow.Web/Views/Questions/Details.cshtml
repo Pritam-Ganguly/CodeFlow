@@ -22,15 +22,15 @@
 
 </div>
 <div class="mt-5">
-    <h4>You're Answer</h4>
+    <div class="fw-semibold fs-4 pb-2">You're Answer</div>
 
     @if(User.Identity?.IsAuthenticated == true)
     {
         <form asp-action="Answer" asp-route-questionId="@Model.Question.Id" method="post">
             @Html.AntiForgeryToken()
 
-            <div class="form-group mb-3">
-                <textarea name="body" class="form-control" rows="6" placeholder="Explain your answer in details..."></textarea>
+            <div class="form-group mb-3 codeflow-editor">
+                <textarea id="AnswerBodyEditor" name="bodyMarkDown" class="form-control" rows="6" placeholder="Explain your answer in details..."></textarea>
                 @if (ViewData.ModelState["answerbody"]?.Errors.Count > 0)
                 {
                     <span class="text-danger">@ViewData.ModelState["answerbody"]?.Errors.First().ErrorMessage</span>
@@ -50,6 +50,129 @@
     }
 
     @section Scripts {
+        <script>
+            const textAreaId = "AnswerBodyEditor";
+            const options = {
+                autofocus: false,
+                autosave: {
+                    enabled: true,
+                    uniqueId: textAreaId,
+                    delay: 1000,
+                    text: "Autosaved: "
+                },
+                blockStyles: {
+                    italic: "_",
+                },
+                unorderedListStyle: "-",
+                element: document.getElementById(textAreaId),
+                forceSync: true,
+                hideIcons: ["guide", "fullsceen", "side-by-side"],
+                indentWithTabs: false,
+                uploadImage: true,
+                imageUploadFunction: function(file, onSuccess, onError) {
+                    const formData = new FormData();
+                    formData.append("file", file);
+
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+                    fetch('/upload/uploadimage', {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': token
+                        },
+                        body: formData
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(err => { throw new Error(err.error || 'Upload failed'); });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        onSuccess(data.data.filePath);
+                    })
+                    .catch(error => {
+                        onError(error.message);
+                        console.error('Image upload error:', error);
+                    });
+                },
+                insertTexts: {
+                    horizontalRule: ["", "\n\n-----\n\n"],
+                    image: ["![](http://", ")"],
+                    link: ["[", "](https://)"],
+                    table: ["", "\n\n| Column 1 | Column 2 | Column 3 |\n| -------- | -------- | -------- |\n| Text     | Text      | Text     |\n\n"],
+                },
+                minHeight: "300px",
+                parsingConfig: {
+                    allowAtxHeaderWithoutSpace: true,
+                    strikethrough: false,
+                    underscoresBreakWords: true,
+                },
+                placeholder: "Describe your problem in detail (Markdown supported..)",
+                previewRender: (plainText, preview) => { // Async method
+                    setTimeout(() => {
+                        const formData = new FormData();
+                        formData.append("markdown", plainText);
+
+                        const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+                        result = fetch(`/questions/RenderMarkDownPreview`, {
+                            method: 'POST',
+                            headers: {
+                                "RequestVerificationToken": token
+                            },
+                            body: formData
+                        })
+                        .then(response => {
+                            return response.json();
+                        })
+                        .then(data => {
+                            console.log(data.data);
+                            preview.innerHTML = data.data;
+                            return data.data;
+                        })
+                        .catch(error => {
+                            console.error('Markdown preview error: ', error);
+                        })
+
+                    }, 2000);
+
+                    return "Parsing Markdown...";
+                },
+                renderingConfig: {
+                    singleLineBreaks: false,
+                    codeSyntaxHighlighting: true,
+                },
+                shortcuts: {
+                        drawTable: "Cmd-Alt-T",
+                        toggleOrderedList: "Cmd-Alt-O",
+                        toggleUnorderedList: "Cmd-Alt-U",
+                        toggleCodeBlock: "Cmd-Alt-C",
+                        toggleHeadingSmaller: "Cmd-Alt-H",
+                        cleanBlock: "Cmd-Alt-E",
+                },
+                showIcons: ["code", "table", "horizontal-rule", "heading", "heading-bigger", "heading-smaller"],
+                spellChecker: false,
+                status: false,
+                status: ["autosave", "lines", "words", "cursor"],
+                styleSelectedText: false,
+                sideBySideFullscreen: false,
+                syncSideBySidePreviewScroll: false,
+                tabSize: 4,
+                toolbar: [
+                        "bold", "italic", "heading", "|",
+                        "code", "quote", "unordered-list", "ordered-list", "|",
+                        "link", "image", "horizontal-rule", "|",
+                        "preview", "side-by-side", "fullscreen", "table"
+                    ],
+                toolbarTips: true,
+            }
+
+            document.addEventListener("DOMContentLoaded", function() {
+                const easyMDE = new EasyMDE(options);
+            })
+        </script>
+
         <script>
             function handleOpen(id){
                 document.getElementById(`answer-body-${id}`).style.display = "none";

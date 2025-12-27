@@ -1,10 +1,12 @@
 ﻿using CodeFlow.core.Models;
 using CodeFlow.core.Repositories;
 using CodeFlow.core.Repositories.AuthServices;
+using CodeFlow.core.Servies;
 using CodeFlow.Web.Filters;
 using CodeFlow.Web.Models;
 using FluentValidation.Results;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,6 +21,7 @@ namespace CodeFlow.Web.Controllers
         private readonly ITagRepository _tagRepository;
         private readonly ICommentRepository _commentRepository;
         private readonly IAuthServices _authServices;
+        private readonly IMarkdownService _markdownService;
         private readonly ILogger<QuestionsController> _logger;
 
         public QuestionsController(
@@ -27,6 +30,7 @@ namespace CodeFlow.Web.Controllers
             IAnswerRepository answerRepository,
             ITagRepository tagRepository, ICommentRepository commentRepository,
             IAuthServices authServices,
+            IMarkdownService markdownService,
             ILogger<QuestionsController> logger)
         {
             _questionRepository = questionRepository;
@@ -35,6 +39,7 @@ namespace CodeFlow.Web.Controllers
             _tagRepository = tagRepository;
             _commentRepository = commentRepository;
             _logger = logger;
+            _markdownService = markdownService;
             _authServices = authServices;
         }
 
@@ -128,7 +133,7 @@ namespace CodeFlow.Web.Controllers
                 { 
                     UserId = user.Id,
                     Title = request.Title,
-                    Body = request.Body,
+                    BodyMarkdown = request.BodyMarkDown,
                     UpdatedAt = DateTime.Now,
                 };
 
@@ -170,19 +175,19 @@ namespace CodeFlow.Web.Controllers
         [ValidateAntiForgeryToken]
         [LogAction]
         [TrackUserActivity(ActivityType.answer_posted, TargetEntityType.question)]
-        public async Task<IActionResult> Answer(int questionId, string body)
+        public async Task<IActionResult> Answer(int questionId, string bodyMarkDown)
         {
-            if (string.IsNullOrWhiteSpace(body))
+            if (string.IsNullOrWhiteSpace(bodyMarkDown))
             {
                 ModelState.AddModelError("answerbody", "Answer body cannot be empty");
                 return await RedisplayDetailsPage(questionId);
             }
-            else if(body.Length < 3)
+            else if(bodyMarkDown.Length < 3)
             {
                 ModelState.AddModelError("answerbody", "Answer body is too short");
                 return await RedisplayDetailsPage(questionId);
             }
-            else if (body.Length > 2000)
+            else if (bodyMarkDown.Length > 20000)
             {
                 ModelState.AddModelError("answerbody", "Maximum answer body size reached");
                 return await RedisplayDetailsPage(questionId);
@@ -198,7 +203,7 @@ namespace CodeFlow.Web.Controllers
 
                 Answer answer = new Answer()
                 {
-                    Body = body.Trim(),
+                    BodyMarkdown = bodyMarkDown.Trim(),
                     QuestionId = questionId,
                     UserId = user.Id
                 };
@@ -243,7 +248,7 @@ namespace CodeFlow.Web.Controllers
                 {
                     Id = question.Id,
                     Title = question.Title,
-                    Body = question.Body,
+                    BodyMarkDown = question.BodyMarkdown,
                 };
                 return View(editRequest);
             }
@@ -293,7 +298,7 @@ namespace CodeFlow.Web.Controllers
                     return View(request);
                 }
 
-                var rowsAffected = await _questionRepository.UpdateQuestionAsync(request.Id, request.Title, request.Body);
+                var rowsAffected = await _questionRepository.UpdateQuestionAsync(request.Id, request.Title, request.BodyMarkDown);
                 if(rowsAffected == 0)
                 {
                     ModelState.AddModelError(string.Empty, "Invalid request");
@@ -314,7 +319,7 @@ namespace CodeFlow.Web.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [LogAction]
-        public async Task<IActionResult> EditAnswer(int id, string? body)
+        public async Task<IActionResult> EditAnswer(int id, string? bodyMarkDown)
         {
             _logger.LogInformation("Started executing edit request for answer id {AnswerId}", id);
 
@@ -327,17 +332,17 @@ namespace CodeFlow.Web.Controllers
                     return BadRequest();
                 }
 
-                if (string.IsNullOrWhiteSpace(body))
+                if (string.IsNullOrWhiteSpace(bodyMarkDown))
                 {
                     ModelState.AddModelError("answer-" + id, "Answer body cannot be empty");
                     return await RedisplayDetailsPage(question.Id);
                 }
-                if (body.Length < 2)
+                if (bodyMarkDown.Length < 2)
                 {
                     ModelState.AddModelError("answer-" + id, "Answer body content is too short");
                     return await RedisplayDetailsPage(question.Id);
                 }
-                if (body.Length > 5000)
+                if (bodyMarkDown.Length > 5000)
                 {
                     ModelState.AddModelError("answer-" + id, "Maximum size limit reached for answer");
                     return await RedisplayDetailsPage(question.Id);
@@ -349,7 +354,8 @@ namespace CodeFlow.Web.Controllers
                     return NotFound();
                 }
 
-                var result = await _answerRepository.EditAnswerAsync(answer.Id, body);
+                var result = await _answerRepository.EditAnswerAsync(answer.Id, bodyMarkDown);
+
                 if (result == null)
                 {
                     return NotFound();
@@ -576,6 +582,28 @@ namespace CodeFlow.Web.Controllers
                 Answers = updatedAnswers
             };
             return View("Details", viewModel);
+        }
+
+        [LogAction]
+        [HttpPost]
+        public  IActionResult RenderMarkDownPreview(string markdown)
+        {
+            try
+            {
+                var bodyHtml = _markdownService.ToHTML(markdown);
+                return Ok(new
+                {
+                    data = bodyHtml
+                });
+            }
+            catch (Exception)
+            {
+                _logger.LogError("An unexpected error occurred");
+                return StatusCode(500, new
+                {
+                    error = "An error occurred"
+                });
+            }
         }
 
         /// <summary>

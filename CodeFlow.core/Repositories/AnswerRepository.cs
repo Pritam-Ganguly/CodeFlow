@@ -1,6 +1,7 @@
 using CodeFlow.core.Data;
 using CodeFlow.core.Models;
 using CodeFlow.core.Models.Mapping;
+using CodeFlow.core.Servies;
 using Dapper;
 using Microsoft.Extensions.Logging;
 
@@ -15,15 +16,17 @@ namespace CodeFlow.core.Repositories
     {
         private readonly IDbConnectionFactory _connectionFactory;
         private readonly IReputationRepository _reputationRepository;
+        private readonly IMarkdownService _markdownService;
         private readonly ILogger<AnswerRepository> _logger;
 
         /// <summary>
         /// Creates a new instance of <see cref="AnswerRepository"/>.
         /// </summary>
-        public AnswerRepository(IDbConnectionFactory connectionFactory, IReputationRepository reputationRepository, ILogger<AnswerRepository> logger)
+        public AnswerRepository(IDbConnectionFactory connectionFactory, IReputationRepository reputationRepository, IMarkdownService markdownService, ILogger<AnswerRepository> logger)
         {
             _connectionFactory = connectionFactory;
             _reputationRepository = reputationRepository;
+            _markdownService = markdownService;
             _logger = logger;
         }
 
@@ -35,10 +38,12 @@ namespace CodeFlow.core.Repositories
             _logger.LogDebug("CreateAsync called for QuestionId={QuestionId}, UserId={UserId}", answer.QuestionId, answer.UserId);
             try
             {
+                var html = _markdownService.ToHTML(answer.BodyMarkdown);
+                answer.BodyHtml = html;
                 var sql = @"
-            INSERT INTO Answers (Body, QuestionId, UserId)
-            VALUES (@Body, @QuestionId, @UserId)
-            RETURNING Id;";
+                    INSERT INTO Answers (BodyMarkDown, BodyHTML, QuestionId, UserId)
+                    VALUES (@BodyMarkDown, @BodyHTML, @QuestionId, @UserId)
+                    RETURNING Id;";
 
                 using var connection = await _connectionFactory.CreateConnectionAsync();
                 var newId = await connection.ExecuteScalarAsync<int>(sql, answer);
@@ -85,11 +90,11 @@ namespace CodeFlow.core.Repositories
             try
             {
                 var sql = @"
-            SELECT a.*, u.*
-            FROM Answers a
-            INNER JOIN Users u ON a.UserId = u.Id
-            WHERE a.QuestionId = @QuestionId
-            ORDER BY a.Score DESC, a.CreatedAt ASC";
+                        SELECT a.*, u.*
+                        FROM Answers a
+                        INNER JOIN Users u ON a.UserId = u.Id
+                        WHERE a.QuestionId = @QuestionId
+                        ORDER BY a.Score DESC, a.CreatedAt ASC";
 
                 using var connection = await _connectionFactory.CreateConnectionAsync();
                 var answers = await connection.QueryAsync<Answer, User, Answer>(sql, map: (answer, user) =>
@@ -183,14 +188,15 @@ namespace CodeFlow.core.Repositories
         /// <summary>
         /// Edits an existing answer's body. Returns number of affected rows (nullable).
         /// </summary>
-        public async Task<int?> EditAnswerAsync(int answerId, string body)
+        public async Task<int?> EditAnswerAsync(int answerId, string bodyMarkDown)
         {
             _logger.LogDebug("EditAnswerAsync called for AnswerId={AnswerId}", answerId);
             try
             {
+                var html = _markdownService.ToHTML(bodyMarkDown);
                 using var connection = await _connectionFactory.CreateConnectionAsync();
-                var sql = @"UPDATE Answers SET Body = @Body WHERE Id = @Id";
-                var rows = await connection.ExecuteAsync(sql, new { Body = body, Id = answerId });
+                var sql = @"UPDATE Answers SET BodyMarkDown = @BodyMarkDown, BodyHTML = @BodyHTML WHERE Id = @Id";
+                var rows = await connection.ExecuteAsync(sql, new { BodyMarkDown = bodyMarkDown, BodyHTML = html, Id = answerId });
                 _logger.LogInformation("EditAnswerAsync updated AnswerId={AnswerId}. RowsAffected={Rows}", answerId, rows);
                 return rows;
             }

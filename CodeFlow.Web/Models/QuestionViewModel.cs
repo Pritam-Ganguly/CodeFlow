@@ -6,7 +6,9 @@ namespace CodeFlow.Web.Models
     {
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
-        public string Body { get; set; } = string.Empty;
+        public string? Body { get; set; } = string.Empty;
+        public string BodyMarkdown { get; set; } = string.Empty;
+        public string BodyHtml { get; set; } = string.Empty;
         public int ViewCount { get; set; } = 0;
         public int Score { get; set; } = 0;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -23,6 +25,8 @@ namespace CodeFlow.Web.Models
             Id = question.Id; 
             Title = question.Title;
             Body = question.Body;
+            BodyMarkdown = question.BodyMarkdown;
+            BodyHtml = question.BodyHtml;
             ViewCount = question.ViewCount;
             Score = question.Score;
             CreatedAt = question.CreatedAt;

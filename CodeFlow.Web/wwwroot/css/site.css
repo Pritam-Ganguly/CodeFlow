@@ -501,3 +501,55 @@ body {
   margin-left: 0.5rem;
   margin-right: 0.5rem;
 }
+
+/* EasyMDE Custom Styling */
+.codeflow-editor {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+    .codeflow-editor .table {
+        width: auto
+    }
+
+    .codeflow-editor .editor-toolbar {
+        border-bottom: 1px solid #ddd;
+        background-color: #f8f9fa;
+    }
+
+    .codeflow-editor .CodeMirror {
+        border: none;
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        font-size: 14px;
+        min-height: 300px;
+    }
+
+    .codeflow-editor .editor-preview {
+        background-color: #f8f9fa;
+        padding: 10px;
+    }
+
+/* Style for the save status indicator */
+.editor-statusbar .autosave {
+    color: #28a745;
+    font-weight: bold;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .codeflow-editor .editor-toolbar {
+        flex-wrap: wrap;
+        height: auto;
+        padding: 5px;
+    }
+
+        .codeflow-editor .editor-toolbar button {
+            margin: 2px;
+            padding: 5px;
+        }
+}
+
+.question-body img {
+    min-width: 600px;
+}

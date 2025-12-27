@@ -100,6 +100,7 @@ namespace CodeFlow.Web.Controllers
             }
         }
 
+        [LogAction]
         public async Task<IActionResult> ProfileImage(int id)
         {
             try
