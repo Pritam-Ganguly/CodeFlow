@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = Model.DisplayName;
     bool isCurrentUser = Model.Id.ToString() == User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    int postPageSize = 10;
 }
 
 <div class="container mt-4">
@@ -28,8 +29,8 @@
                     
         </style>
     }
-        <div class="row">
-            <div class="card mb-3 col-4">
+    <div class="d-flex flex-column flex-md-row">
+        <div class="card mb-3 me-md-3 flex-md-fill">
                     <div class="card-body text-center">
                             <div class="mb-3">
                     @if (isCurrentUser)
@@ -79,14 +80,13 @@
                         </div>
                     </div>
                 </div>
-
-                <div class="card mb-3 col-8">
+        <div class="card mb-3 me-md-3 flex-md-fill">
                     <div class="card-header">
                         <h6 class="mb-0">Statistics</h6>
                     </div>
                     <div class="card-body">
                         <div class="row text-center">
-                            <div class="col-6 mb-2">
+                            <div class="col-6 mt-2">
                                 <div class="fw-bold">@Model.Questions.Count()</div>
                                 <small class="text-muted">Questions Asked</small>
                             </div>
@@ -118,9 +118,9 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        <div class="row" id="accordion">
-        <div class="card">
+    </div>
+    <div class="" id="accordion">
+        <div class="card mb-3 me-md-3">
             <div class="card-header p-0" id="bioHeading">
                 <h6 class="mb-0">
                     <button id="bioHeading" class="btn btn-link btn-block text-left p-3 text-decoration-none"
@@ -154,23 +154,23 @@
                 </div>
             </div>
         </div>
-            <div class="card">
+        <div class="card mb-3 me-md-3">
                 <div class="card-header">
                     <ul class="nav nav-tabs card-header-tabs" id="profileTabs" role="tablist">
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="questions-tab" data-bs-toggle="tab"
+                        <button class="nav-link active" style="width: min-content"  id="questions-tab" data-bs-toggle="tab"
                                     data-bs-target="#questions" type="button" role="tab">
-                                Questions
+                                Post History
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="reputation-history-tab" data-bs-toggle="tab"
+                            <button class="nav-link" style="width: min-content" id="reputation-history-tab" data-bs-toggle="tab"
                                     data-bs-target="#reputation-history" type="button" role="tab">
                                 Reputation History
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="user-activity-tab" data-bs-toggle="tab"
+                        <button class="nav-link" style="width: min-content"  id="user-activity-tab" data-bs-toggle="tab"
                                     data-bs-target="#user-activity-history" type="button" role="tab">
                                 Activity History
                             </button>
@@ -184,10 +184,10 @@
                             {
                                 <div class="activity-item mb-1 pb-1 border-bottom">
                                     <p class="row mb-2 text-muted small">
-                                        <span class=" fw-bold col-1 p-1">
+                                        <span class=" fw-bold col-2 p-1">
                                             Score
                                         </span>
-                                        <span class="fw-bold col-8 p-1">
+                                        <span class="fw-bold col-7 p-1">
                                             Title
                                         </span>
                                         <span class="fw-bold col-3 p-1">
@@ -199,10 +199,10 @@
                                     @foreach (var question in Model.Questions)
                                     {
                                         <a asp-controller="Questions" asp-action="Details" asp-route-id="@question.Id">
-                                            <div class="activity-item mb-1 pb-1 border-bottom">
+                                            <div class="activity-item mb-1 border-bottom">
                                                 <p class="row mb-2 text-muted small">
-                                                    <span class=" col-1 p-1 fw-bold" style="color: orange">@question.Score</span>
-                                                    <span class=" col-8 p-1">
+                                                    <span class=" col-2 p-1 fw-bold" style="color: orange; justify-content: center">@question.Score</span>
+                                                    <span class=" col-7 p-1">
                                                         @question.Title
                                                     </span>
                                                     <span class="col-3 p-1">
@@ -213,15 +213,18 @@
                                         </a>
                                     }
                                 </div>
-                                <div class="mt-3 text-center">
-                                    <button id="loadMoreQuestions"
-                                            class="btn btn-outline-primary"
-                                            data-page-size="5"
-                                            data-page-number="1"
-                                            data-user-id="@Model.Id">
-                                        Load More
-                                    </button>
-                                </div>
+                                @if (postPageSize < Model.Questions.Count())
+                                {
+                                    <div class="mt-3 text-center">
+                                        <button id="loadMoreQuestions"
+                                                class="btn btn-outline-primary"
+                                                data-page-size="@postPageSize"
+                                                data-page-number="1"
+                                                data-user-id="@Model.Id">
+                                            Load More
+                                        </button>
+                                    </div>
+                                }
                             }
                             else
                             {
@@ -240,12 +243,12 @@
                                 {
                                     <div class="activity-item mb-1 pb-1 border-bottom">
                                         <p class="row mb-2 text-muted small">
-                                        <span class=" col-1 p-1 fw-bold" style="color: orange">@reputationHistory.Amount</span>
-                                        <span class=" col-8 p-1">
+                                        <span class=" col-2 p-1 fw-bold" style="color: orange">@reputationHistory.Amount</span>
+                                        <span class=" col-7 p-1">
                                             @reputationHistory.Description
                                         </span>
                                         <span class="col-3 p-1">
-                                            - @reputationHistory.CreatedAt
+                                            @reputationHistory.CreatedAt
                                         </span>
                                         </p>
                                     </div>
@@ -258,133 +261,134 @@
                     </div>
                 </div>
             </div>
-        </div>
-        @section Scripts {
-            <script>
-                function handleEditBio() {
-                    const bsCollapse = new bootstrap.Collapse('#bioCollapse', {
-                          toggle: false
-                        })
-                    bsCollapse.show();
+    </div>   
+</div>
 
-                    document.getElementById('bioDisplay').style.display = "none";
-                    document.getElementById('bioEditButton').style.display = "none";
-                    document.getElementById('bioEdit').style.display = "block";
-                }
+@section Scripts {
+    <script>
+            function handleEditBio() {
+                const bsCollapse = new bootstrap.Collapse('#bioCollapse', {
+                      toggle: false
+                    })
+                bsCollapse.show();
 
-                function handlerCloseBio() {
-                    document.getElementById('bioEdit').style.display = "none";
-                    document.getElementById('bioDisplay').style.display = "block";
-                    document.getElementById('bioEditButton').style.display = "inline";
-                }
+                document.getElementById('bioDisplay').style.display = "none";
+                document.getElementById('bioEditButton').style.display = "none";
+                document.getElementById('bioEdit').style.display = "block";
+            }
 
-                function handleProfilePictureClick() {
-                    document.getElementById('profileImageInput').click();
-                }
+            function handlerCloseBio() {
+                document.getElementById('bioEdit').style.display = "none";
+                document.getElementById('bioDisplay').style.display = "block";
+                document.getElementById('bioEditButton').style.display = "inline";
+            }
 
-                document.getElementById('profileImageInput').addEventListener('change', async (e) => {
-                    const file = e.target.files[0];
+            function handleProfilePictureClick() {
+                document.getElementById('profileImageInput').click();
+            }
 
-                    if (file) {
-                        if(file.size > 5 * 1024 * 1024){
-                            alert('File size is greater than 5mb');
-                            return;
-                        }
-                    }
+            document.getElementById('profileImageInput').addEventListener('change', async (e) => {
+                const file = e.target.files[0];
 
-                    const allowedTypes = ['image/jpeg', 'image/png']
-
-                    if(!allowedTypes.includes(file.type)){
-                        alert('Please enter a valid image type');
+                if (file) {
+                    if(file.size > 5 * 1024 * 1024){
+                        alert('File size is greater than 5mb');
                         return;
                     }
+                }
 
-                    const formData = new FormData();
-                    formData.append('id', @Model.Id)
-                    formData.append('profilePicture', file);
+                const allowedTypes = ['image/jpeg', 'image/png']
 
-                try{
-                    const respone = await fetch('/Profile/UpdateProfilePicture', {
-                        method: 'POST',
-                        body: formData,
+                if(!allowedTypes.includes(file.type)){
+                    alert('Please enter a valid image type');
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('id', @Model.Id)
+                formData.append('profilePicture', file);
+
+            try{
+                const respone = await fetch('/Profile/UpdateProfilePicture', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    }
+                })
+
+                if(respone.ok){
+                    console.log("Successfully uploaded the profile picture");
+                    alert("Image uploaded successfully");
+                    location.reload();
+                }
+                else{
+                    alert("an error occured");
+                }
+
+            }
+            catch(error){
+                console.log('Upload error', error);
+                alert("an unexpected error occurred");
+            }
+            })
+
+            document.getElementById("loadMoreQuestions").addEventListener("click", async (e) => {
+                const btn = e.currentTarget;
+                let pageNumber = parseInt(btn.dataset.pageNumber, 10) + 1;
+                const pageSize = parseInt(btn.dataset.pageSize, 10);
+                const userId = btn.dataset.userId;
+
+                try
+                {
+                    const res = await fetch(`/Profile/UserQuestions?id=${userId}&page=${pageNumber}&pageSize=${pageSize}`, {
+                        method: 'GET',
                         headers: {
-                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                            'X-Requested-With': 'XMLHttpRequest'
                         }
                     })
 
-                    if(respone.ok){
-                        console.log("Successfully uploaded the profile picture");
-                        alert("Image uploaded successfully");
-                        location.reload();
-                    }
-                    else{
-                        alert("an error occured");
+                    if(res.status == 204){
+                        btn.style.display = 'none';
+                        return;
                     }
 
-                }
-                catch(error){
-                    console.log('Upload error', error);
-                    alert("an unexpected error occurred");
-                }
-                })
-
-                document.getElementById("loadMoreQuestions").addEventListener("click", async (e) => {
-                    const btn = e.currentTarget;
-                    let pageNumber = parseInt(btn.dataset.pageNumber, 10) + 1;
-                    const pageSize = parseInt(btn.dataset.pageSize, 10);
-                    const userId = btn.dataset.userId;
-
-                    try
-                    {
-                        const res = await fetch(`/Profile/UserQuestions?id=${userId}&page=${pageNumber}&pageSize=${pageSize}`, {
-                            method: 'GET',
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest'
-                            }
-                        })
-                        
-                        if(res.status == 204){
-                            btn.style.display = 'none';
-                            return;
-                        }
-
-                        if(!res.ok){
-                            console.error("Error occured while loading more questions", e);
-                            alert("An unexpected error occured");
-                            return;
-                        }
-
-                        const html = await res.text();
-                        if(!html.trim()){
-                            btn.style.display = 'none';
-                            return;
-                        }
-
-                        const container = document.getElementById("questionsList");
-                        const temp = document.createElement('div');
-                        temp.innerHTML = html;
-                        if(temp){
-                            container.appendChild(temp);
-                        }
-
-                        btn.dataset.pageNumber = pageNumber;
-
-                        const appendedItems = html.match(/activity-item/g) || [];
-                        if(appendedItems.length < pageSize){
-                            btn.style.display = 'none';
-                        }
-                        else{
-                            btn.style.display = 'block';
-                        }
-                    }
-                    catch(e)
-                    {
+                    if(!res.ok){
                         console.error("Error occured while loading more questions", e);
                         alert("An unexpected error occured");
+                        return;
                     }
 
-                })
+                    const html = await res.text();
+                    if(!html.trim()){
+                        btn.style.display = 'none';
+                        return;
+                    }
 
-            </script>
-        }
-</div>
+                    const container = document.getElementById("questionsList");
+                    const temp = document.createElement('div');
+                    temp.innerHTML = html;
+                    if(temp){
+                        container.appendChild(temp);
+                    }
+
+                    btn.dataset.pageNumber = pageNumber;
+
+                    const appendedItems = html.match(/activity-item/g) || [];
+                    if(appendedItems.length < pageSize){
+                        btn.style.display = 'none';
+                    }
+                    else{
+                        btn.style.display = 'block';
+                    }
+                }
+                catch(e)
+                {
+                    console.error("Error occured while loading more questions", e);
+                    alert("An unexpected error occured");
+                }
+
+            })
+
+        </script>
+}

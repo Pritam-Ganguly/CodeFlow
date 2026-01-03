@@ -3,6 +3,7 @@ using CodeFlow.core.Repositories;
 using CodeFlow.core.Repositories.Utils;
 using CodeFlow.Web.Filters;
 using CodeFlow.Web.Models;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
@@ -20,6 +21,7 @@ namespace CodeFlow.Web.Controllers
         private readonly IUserActivityRepository _userActivityRepository;
         private readonly IAnswerRepository _answerRepository;
         private readonly IUserRepository _userRepository;
+        private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly ILogger<ProfileController> _logger;
 
         public ProfileController(
@@ -29,6 +31,7 @@ namespace CodeFlow.Web.Controllers
             IUserActivityRepository userActivityRepository,
             IAnswerRepository answerRepository,
             IUserRepository userRepository,
+            IWebHostEnvironment webHostEnvironment,
             ILogger<ProfileController> logger)
         {
             _reputationRepository = reputationRepository;
@@ -37,6 +40,7 @@ namespace CodeFlow.Web.Controllers
             _userActivityRepository = userActivityRepository;
             _answerRepository = answerRepository;
             _userRepository = userRepository;
+            _webHostEnvironment = webHostEnvironment;
             _logger = logger;
         }
 
@@ -112,7 +116,19 @@ namespace CodeFlow.Web.Controllers
                     return BadRequest();
                 }
 
-                return File(userProfile.ProfilePicture, userProfile.ProfilePictureMimeType);
+                if(userProfile.ProfilePicture.Count() > 0)
+                {
+                    return File(userProfile.ProfilePicture, userProfile.ProfilePictureMimeType);
+                }
+                else
+                {
+                    var webRootPath = _webHostEnvironment.WebRootPath;
+                    var defaultImagePath = Path.Combine(webRootPath, "img", "defaultprofile.jpg");
+
+                    var imageBytes = await System.IO.File.ReadAllBytesAsync(defaultImagePath);
+                    return File(imageBytes, "image/jpeg");
+                }
+
             }
             catch (Exception ex)
             {

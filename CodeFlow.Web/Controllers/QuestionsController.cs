@@ -2,6 +2,7 @@
 using CodeFlow.core.Repositories;
 using CodeFlow.core.Repositories.AuthServices;
 using CodeFlow.core.Servies;
+using CodeFlow.Web.Components;
 using CodeFlow.Web.Filters;
 using CodeFlow.Web.Models;
 using FluentValidation.Results;
@@ -79,6 +80,7 @@ namespace CodeFlow.Web.Controllers
 
                 var viewModel = new DetailsViewModel()
                 {
+                    TotalAnswers = await _answerRepository.GetTotalAnswerCountForQuestionid(question.Id),
                     Question = updatedQuestion,
                     Answers = updatedAnswers
                 };
@@ -544,6 +546,63 @@ namespace CodeFlow.Web.Controllers
             }
         }
 
+        [HttpGet]
+        [LogAction]
+        public async Task<IActionResult> GetMoreAnswers(int questionId, int userId, int pageSize, int pageNumber)
+        {
+            try
+            {
+                var answers = await _answerRepository.GetByQuestionIdAsync(questionId, pageSize, pageNumber);
+
+                var updatedAnswers = await Task.WhenAll(answers.Select(async (answer) =>
+                {
+                    return new AnswerViewModel(answer)
+                    {
+                        IsAuthor = IsAuthor(answer.UserId),
+                        CurrentVote = await CurrentVoteForAnswers(answer.Id),
+                        Comments = await _commentRepository.GetAnswerCommentsAsync(answer.Id),
+                    };
+                }));
+
+                if (answers.Count() > 0)
+                {
+                    return ViewComponent("Answers", new AnswerViewComponentModel
+                    {
+                        Answers = updatedAnswers,
+                        IsAuthor = IsAuthor(userId)
+                    });
+                }
+                return NoContent();
+            }
+            catch (Exception ex) {
+                _logger.LogError(ex, "An error occurred while execution get more answers action");
+                return StatusCode(500, "An internal error occured");
+            }
+        }
+
+
+        [LogAction]
+        [HttpPost]
+        public IActionResult RenderMarkDownPreview(string markdown)
+        {
+            try
+            {
+                var bodyHtml = _markdownService.ToHTML(markdown);
+                return Ok(new
+                {
+                    data = bodyHtml
+                });
+            }
+            catch (Exception)
+            {
+                _logger.LogError("An unexpected error occurred");
+                return StatusCode(500, new
+                {
+                    error = "An error occurred"
+                });
+            }
+        }
+
         /// <summary>
         /// Asynchronously retrieves and prepares the details of a question and its associated answers for display.
         /// </summary>
@@ -578,32 +637,11 @@ namespace CodeFlow.Web.Controllers
 
             var viewModel = new DetailsViewModel()
             {
+                TotalAnswers = await _answerRepository.GetTotalAnswerCountForQuestionid(question.Id),
                 Question = updatedQuestion,
                 Answers = updatedAnswers
             };
             return View("Details", viewModel);
-        }
-
-        [LogAction]
-        [HttpPost]
-        public  IActionResult RenderMarkDownPreview(string markdown)
-        {
-            try
-            {
-                var bodyHtml = _markdownService.ToHTML(markdown);
-                return Ok(new
-                {
-                    data = bodyHtml
-                });
-            }
-            catch (Exception)
-            {
-                _logger.LogError("An unexpected error occurred");
-                return StatusCode(500, new
-                {
-                    error = "An error occurred"
-                });
-            }
         }
 
         /// <summary>

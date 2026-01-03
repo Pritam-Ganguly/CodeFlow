@@ -16,6 +16,7 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
   line-height: 1.3;
+  min-width: 300px;
 }
 
 /* Header / Navbar */
@@ -29,11 +30,6 @@ body {
   z-index: 1000;
 }
 
-.so-navbar {
-  padding: 0;
-  height: 50px;
-}
-
 .so-brand {
   color: var(--so-black) !important;
   font-size: 1.5rem;
@@ -45,6 +41,17 @@ body {
 .so-brand:hover {
   background-color: var(--so-light-gray);
   border-radius: 20px;
+}
+
+.navbar-toggler {
+    padding: 0.5rem 0.75rem;
+    min-width: 44px;
+    min-height: 44px;
+}
+
+/* Prevent horizontal scrolling on mobile */
+body {
+    overflow-x: hidden;
 }
 
 /* User actions (login/register/avatar) */

@@ -1,6 +1,5 @@
 ﻿@model CodeFlow.Web.Components.AnswerViewComponentModel;
 
-<h5>@(Model.Answers.Count()) @(Model.Answers.Count() == 1 ? "Answer" : " Answers")</h5>
 <hr />
 @if (Model.Answers.Any())
 {
@@ -10,7 +9,25 @@
     {
         <div class="card answers-section mb-3">
             <div class="card-body row">
-                <div class="col-1">
+                <div class="d-flex justify-content-end align-items-center pb-2 gap-3">
+                    @if (!answer.IsAccepted && answer.IsAuthor)
+                    {
+                        <div>
+                            <a href="javascript:void(0);" class="text-decoration-none" onclick="handleOpen(@answer.Id)">
+                                <i class="fas fa-pen-to-square text-opacity-50" style="color: cadetblue"></i>
+                            </a>
+                        </div>
+                        <div>
+                            <form asp-controller="Questions" asp-action="DeleteAnswer" method="post" asp-route-answerId="@answer.Id">
+                                @Html.AntiForgeryToken()
+                                <button class="so-delete-icon-button" type="submit">
+                                    <i class="fas fa-trash text-opacity-50" style="color: cadetblue"></i>
+                                </button>
+                            </form>
+                        </div>
+                    }
+                </div>
+                <div class="col-2">
                     @if (!User.Identity!.IsAuthenticated)
                     {
                         <a class="text-decoration-none" asp-controller="Account" asp-action="Login">
@@ -54,7 +71,7 @@
                     else
                     {
                         <a asp-controller="Profile" asp-action="UserProfile" asp-route-id="@User.FindFirst(ClaimTypes.NameIdentifier)?.Value">
-                            <div class="d-flex align-items-center justify-content-center rounded-circle" style="background-color: aliceblue; width: 50px; height: 50px; border: 1px solid grey">
+                            <div class="d-flex align-items-center justify-content-center" >
                                 <img id="ProfileImage" style="width: 40px; height: 40px"
                                      src="@Url.Action("ProfileImage", "Profile", new { id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value })"
                                      class="rounded-circle" />
@@ -75,22 +92,6 @@
                         </div>
                     </form>
                 </div>
-                @if (!answer.IsAccepted && answer.IsAuthor)
-                {
-                    <div class="col-1 answer-body">
-                        <form asp-controller="Questions" asp-action="DeleteAnswer" method="post" asp-route-answerId="@answer.Id">
-                            @Html.AntiForgeryToken()
-                            <button class="so-delete-icon-button" type="submit">
-                                <i class="fas fa-trash text-opacity-50" style="color: cadetblue"></i>
-                            </button>
-                        </form>
-                    </div>
-                    <div class="col-2">
-                        <a href="javascript:void(0);" class="text-decoration-none" onclick="handleOpen(@answer.Id)">
-                            <i class="fas fa-pen-to-square text-opacity-50" style="color: cadetblue"></i>
-                        </a>
-                    </div>
-                }
                 <div class="col-md-7 offset-md-6 text-muted mt-2 justify-content-end so-postdate">
                     Answered by <strong>
                         <a asp-controller="Profile" asp-action="UserProfile" asp-route-id="@answer.User?.Id">

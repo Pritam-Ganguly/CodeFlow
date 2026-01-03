@@ -29,8 +29,8 @@
         </div>
     }
 </div>
-<div id="comments-section" class="so-comments-container" style="display: block">
-    @foreach (var comment in Model.Comments)
+<div id="comments-section" class="so-comments-container p-2" style="display: block">
+    @foreach (var comment in Model.Comments.Take(8))
     {
         @await Html.PartialAsync("_Comment", comment)
     }

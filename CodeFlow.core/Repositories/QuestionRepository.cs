@@ -341,7 +341,7 @@ namespace CodeFlow.core.Repositories
                     _ => " q.CreatedAt DESC"
                 };
 
-                sql += @" LIMIT @PageSize OFFSET @Offset";
+                sql += @" LIMIT @PageSize OFFSET @Offset;";
 
                 Console.WriteLine(sql);
 

@@ -84,17 +84,18 @@ namespace CodeFlow.core.Repositories
         /// <summary>
         /// Returns all answers for a question ordered by score desc then creation asc.
         /// </summary>
-        public async Task<IEnumerable<Answer>> GetByQuestionIdAsync(int questionId)
+        public async Task<IEnumerable<Answer>> GetByQuestionIdAsync(int questionId, int pageSize = 5, int pageNumber = 1) 
         {
             _logger.LogDebug("GetByQuestionIdAsync called for QuestionId={QuestionId}", questionId);
             try
             {
+                int offset = (pageNumber - 1) * pageSize;
                 var sql = @"
                         SELECT a.*, u.*
                         FROM Answers a
                         INNER JOIN Users u ON a.UserId = u.Id
                         WHERE a.QuestionId = @QuestionId
-                        ORDER BY a.Score DESC, a.CreatedAt ASC";
+                        ORDER BY a.Score DESC, a.CreatedAt DESC LIMIT @PageSize OFFSET @Offset";
 
                 using var connection = await _connectionFactory.CreateConnectionAsync();
                 var answers = await connection.QueryAsync<Answer, User, Answer>(sql, map: (answer, user) =>
@@ -102,7 +103,7 @@ namespace CodeFlow.core.Repositories
                     answer.User = user;
                     return answer;
                 },
-                param: new { QuestionId = questionId },
+                param: new { QuestionId = questionId, PageSize = pageSize, Offset = offset},
                 splitOn: "Id");
 
                 var count = answers?.Count() ?? 0;
@@ -112,6 +113,27 @@ namespace CodeFlow.core.Repositories
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to get answers for QuestionId={QuestionId}", questionId);
+                throw;
+            }
+        }
+        /// <summary>
+        /// Returns total answers count for a give question id.
+        /// </summary>
+        public async Task<int> GetTotalAnswerCountForQuestionid(int questionId)
+        {
+            try{
+                var sql = @"SELECT Count(*) FROM Answers a WHERE a.QuestionId = @QuestionId";
+
+                using var connection = await _connectionFactory.CreateConnectionAsync();
+                var answers = await connection.ExecuteScalarAsync<int>(sql, new
+                {
+                    QuestionId = questionId
+                });
+                return answers;
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get answers count for QuestionId={QuestionId}", questionId);
                 throw;
             }
         }
