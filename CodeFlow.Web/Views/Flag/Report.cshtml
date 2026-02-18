@@ -1,0 +1,49 @@
+﻿@model CodeFlow.Web.Models.ReportViewModel;
+
+@{
+    ViewData["Title"] = "Report post..";
+}
+
+<div class="container">
+    <div class="card mb-3 w-100">
+        <div class="card-header fs-4 fw-semibold">Enter details</div>
+        <form asp-controller="Flag" asp-action="Report" method="post" class="card-body">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div><br/>
+            <input type="hidden" asp-for="PostId" />
+            <input type="hidden" asp-for="PostType" />
+            <input type="hidden" asp-for="PostTitle" />
+            <input type="hidden" asp-for="PostBody" />
+            <input type="hidden" asp-for="CreatedByUserId" />
+            <input type="hidden" asp-for="CreatedByUserName" />
+            
+            <div class="mb-3 row p-2">
+                <span asp-validation-for="Reason" class="text-danger"></span>
+                <label asp-for="Reason" class="form-label fw-semibold ">Reason:</label>
+                <textarea asp-for="Reason" class="form-control p-2" rows="3"></textarea>
+            </div>
+            <div class="mb-3 row p-2 gap-2">
+                <label asp-for="SelectedFlagTypeId" class="form-label col-sm-2 fw-semibold ">Report type: </label>
+                <select asp-for="SelectedFlagTypeId" asp-items="@Model.FlagSelectList" class="btn btn-outline-primary dropdown-toggle col-sm-5 w-50 ps-4"></select>
+            </div>
+
+            <div class="row mb-2 p-2 gap-2 justify-content-end">
+                <button class="btn btn-danger col-sm-2" type="submit">Report</button>
+                <button onclick="window.history.go(-1); return false;" class="btn btn-secondary col-sm-2">Cancel</button>
+            </div>
+        </form>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            @if (Model.PostTitle != null)
+            {
+                <div class="shadow-sm bg-body-tertiary p-1 mb-3 fs-4 fw-semibold">@Model.PostTitle</div>
+            }
+            <div class="text-end pe-2">
+                <a asp-action="UserProfile" asp-controller="Profile" asp-route-id="@Model.CreatedByUserId">
+                    By @Model.CreatedByUserName
+                </a>
+            </div>
+            <div class="pt-2">@Html.Raw(Model.PostBody)</div>
+        </div>
+    </div>
+</div>

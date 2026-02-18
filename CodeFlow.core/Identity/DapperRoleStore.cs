@@ -196,7 +196,45 @@ namespace CodeFlow.core.Identity
             }
         }
 
-        public Task<IdentityResult> DeleteAsync(ApplicationRole role, CancellationToken cancellationToken) => Task.FromResult(IdentityResult.Success);
+        public async Task<IdentityResult> DeleteAsync(ApplicationRole role, CancellationToken cancellationToken)
+        {
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            _logger.LogDebug("Attempting to delte role by normalized name: {Name}", role.Name);
+
+            try
+            {
+                using var connection = await _dbConnectionFactory.CreateConnectionAsync();
+
+                var sql = "DELETE FROM Roles WHERE UPPER(Name) = UPPER(@Name)";
+                var result = await connection.ExecuteAsync(sql, new
+                {
+                    Name = role.Name,
+                });
+
+                if (result > 0)
+                {
+                    _logger.LogDebug("Successfully deleted role with normalized name: {name}", role.Name);
+                }
+                else
+                {
+                    _logger.LogDebug("No role found with normalized name: {Name}", role.Name);
+                }
+
+                return IdentityResult.Success;
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.LogInformation("Operation to find role by normalized name for {Name} was cancelled", role.Name);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "An unexpected error occurred while finding role by normalized name {Name}. Error: {ErrorMessage}", role.Name, ex.Message);
+                throw;
+            }
+        }
 
         public Task<string?> GetNormalizedRoleNameAsync(ApplicationRole role, CancellationToken cancellationToken)
         {

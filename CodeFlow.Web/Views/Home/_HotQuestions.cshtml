@@ -1,0 +1,26 @@
+﻿@model IEnumerable<CodeFlow.core.Models.Question>
+
+@{
+    <div class="so-widget">
+        <div class="so-widget-title">Hot Network Questions</div>
+        <div class="so-card">
+            <div class="so-card-body">
+                @if (Model.Any())
+                {
+                    @foreach (var quesiton in Model)
+                    {
+                        <div class="mb-2">
+                            <a asp-controller="Questions" asp-action="Details" asp-route-id="@quesiton.Id" class="small">@quesiton.Title</a>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="mb-2">
+                        No questions to display
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}

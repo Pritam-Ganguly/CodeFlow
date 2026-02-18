@@ -49,6 +49,16 @@
                         <ul class="navbar-nav flex-row flex-wrap align-items-center gap-2 p-2">
                             @if (User.Identity!.IsAuthenticated)
                             {
+                                <li>
+                                    <div class="dropdown dropstart">
+                                        <a class=" btn dropdown-toggle" id="notification_display" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="fa-regular fa-bell p-2"></i><span class="badge bg-danger" id="notification_count_badge"></span>
+                                        </a>
+                                            <ul id="notification_list" class="dropdown-menu" data-empty="1" aria-labelledby="notification_list">
+                                                <li class="list-group-item dropdown-item">Loading Notifications</li>
+                                            </ul>
+                                    </div>
+                                </li>
                                 <li class="nav-item">
                                     <div class="d-flex align-items-center gap-2">
                                         <a asp-controller="Profile" asp-action="UserProfile" asp-route-id="@User.FindFirst(ClaimTypes.NameIdentifier)?.Value">
@@ -87,21 +97,15 @@
     <div class="so-container">
         <aside class="so-sidebar">
             <ul class="so-sidebar-nav">
-                <li class="so-sidebar-item active">Home</li>
-                <li class="so-sidebar-title">PUBLIC</li>
                 <li class="so-sidebar-item">
-                    <i class="fas fa-globe-americas me-1"></i> Questions
+                    <a asp-action="Index" asp-controller="Home">
+                        Home
+                    </a>
                 </li>
-                <li class="so-sidebar-item">Tags</li>
-                <li class="so-sidebar-item">Users</li>
-                <li class="so-sidebar-item">Companies</li>
-                <li class="so-sidebar-title">COLLECTIVES</li>
                 <li class="so-sidebar-item">
-                    <i class="fas fa-star me-1"></i> Explore Collectives
-                </li>
-                <li class="so-sidebar-title">TEAMS</li>
-                <li class="so-sidebar-item">
-                    <i class="fas fa-users me-1"></i> Create free Team
+                    <a asp-action="Dashboard" asp-controller="Moderation">
+                        Dashboard
+                    </a>
                 </li>
             </ul>
         </aside>
@@ -109,74 +113,9 @@
             @RenderBody()
         </main>
         <aside class="so-right-sidebar">
-            <div class="so-widget so-card">
-                <div class="so-card-header">The Overflow Blog</div>
-                <div class="so-card-body">
-                    <div class="mb-3">
-                        <div class="fw-bold">How API governance fosters collaboration</div>
-                        <div class="text-muted small">Mar 15, 2025</div>
-                    </div>
-                    <div>
-                        <div class="fw-bold">The complete guide to protecting your APIs with OAuth</div>
-                        <div class="text-muted small">Mar 10, 2025</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="so-widget so-card">
-                <div class="so-card-header">Featured on Meta</div>
-                <div class="so-card-body">
-                    <div class="mb-2">
-                        <i class="fas fa-comment-alt me-1 text-primary"></i>
-                        <span>Preventing unauthorized automated access to the network</span>
-                    </div>
-                    <div class="mb-2">
-                        <i class="fas fa-shield-alt me-1 text-primary"></i>
-                        <span>Updates to the upcoming Community Asks Sprint</span>
-                    </div>
-                    <div>
-                        <i class="fas fa-tag me-1 text-primary"></i>
-                        <span>2025 Community Moderator Election Results</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="so-widget">
-                <div class="so-widget-title">Custom Filters</div>
-                <div class="so-card">
-                    <div class="so-card-body">
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" id="unanswered">
-                            <label class="form-check-label small" for="unanswered">Unanswered</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="nobounty">
-                            <label class="form-check-label small" for="nobounty">No accepted answer</label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="so-widget">
-                <div class="so-widget-title">Hot Network Questions</div>
-                <div class="so-card">
-                    <div class="so-card-body">
-                        <div class="mb-2">
-                            <a href="#" class="small">Why does my C# application consume so much memory?</a>
-                        </div>
-                        <div class="mb-2">
-                            <a href="#" class="small">How to properly handle exceptions in async methods?</a>
-                        </div>
-                        <div class="mb-2">
-                            <a href="#" class="small">Best practices for database migrations in production?</a>
-                        </div>
-                        <div class="mb-2">
-                            <a href="#" class="small">What's the difference between .NET Core and .NET 5+?</a>
-                        </div>
-                        <div class="mb-2">
-                            <a href="#" class="small">How to implement caching in a distributed system?</a>
-                        </div>
-                    </div>
+            <div class="so-widget" id="HotQuestions"></div>
+            <div aria-live="polite" aria-atomic="true" class="position-relative">
+                <div id="toast-container" class="toast-container position-absolute top-0 end-0 p-3">
                 </div>
             </div>
         </aside>
@@ -224,10 +163,27 @@
             </div>
         </div>
     </footer>
+    
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+
+        async function getHotQuestions() {
+            var response = await fetch("/Home/GetHotQuestions", {
+                       method: 'GET',
+                       headers: {
+                           'X-Requested-With': 'XMLHttpRequest'
+                       }
+            }).then(res => res.text()).catch(e => console.error(e));
+            return response;
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
             hljs.highlightAll();
-        });
+            var hotQuestions = await getHotQuestions();
+            var hotQuestionCard = document.getElementById("HotQuestions");
+            var card = document.createElement('div');
+            card.innerHTML = hotQuestions;
+            hotQuestionCard.appendChild(card);
+        })
     </script>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
@@ -235,6 +191,8 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+    <script src="~/js/signalr/dist/browser/signalr.js"></script>
+    <script src="~/js/notification.js"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
     @await RenderSectionAsync("Styles", required: false)

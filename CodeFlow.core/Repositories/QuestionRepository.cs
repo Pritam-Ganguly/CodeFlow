@@ -164,49 +164,6 @@ namespace CodeFlow.core.Repositories
             }
         }
 
-        /// <summary>
-        /// Returns recent questions ordered by created date descending.
-        /// </summary>
-        public async Task<IEnumerable<Question>> GetRecentAsync(int pageNumber = 1, int pageSize = 10, QuestionSortType sortBy = QuestionSortType.Newest)
-        {
-            _logger.LogDebug("GetRecentAsync called with limit={Limit}", pageSize);
-            try
-            {
-                var sql = @"
-                SELECT q.*, u.*
-                FROM Questions q
-                INNER JOIN Users u ON q.UserId = u.Id";
-
-                sql += sortBy switch
-                {
-                    QuestionSortType.Oldest => @" ORDER BY q.CreatedAt",
-                    QuestionSortType.Score => @" ORDER BY q.Score",
-                    _ => @" ORDER BY q.CreatedAt DESC"
-                };
-
-                sql += @" LIMIT @PageSize OFFSET @Offset";
-
-                var offset = (pageNumber = 1) * pageSize;
-                using var connection = await _connectionFactory.CreateConnectionAsync();
-                var results = await connection.QueryAsync<Question, User, Question>(sql, map: (question, user) =>
-                {
-                    question.User = user;
-                    return question;
-                },
-                param: new { PageSize = pageSize, Offset = offset},
-                splitOn: "Id");
-
-                var count = results?.Count() ?? 0;
-                _logger.LogInformation("GetRecentAsync returned {Count} questions (limit {Limit})", count, pageSize);
-                return results ?? [];
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to get recent questions (limit={Limit})", pageSize);
-                throw;
-            }
-        }
-
         public async Task<int> GetAllQuestions()
         {
             try
@@ -326,7 +283,7 @@ namespace CodeFlow.core.Repositories
                 if (string.IsNullOrWhiteSpace(searchQuery))
                 {
                     _logger.LogInformation("SearchAsync empty query - returning recent questions");
-                    return await GetRecentAsync(pageNumber, pageSize, sortType);
+                    return await GetRecentWithTagsAsync(pageNumber, pageSize, sortType);
                 }
 
                 var offset = (pageNumber - 1) * pageSize;

@@ -1,0 +1,69 @@
+﻿@model CodeFlow.core.Models.Flag;
+
+@using CodeFlow.core.Models;
+
+@{
+    ViewData["Title"] = "Flag details";
+}
+
+<div class="container">
+    <div class="d-block mb-2 pt-2 pb-3">
+        <div class="fw-bold text-dark-emphasis fs-4 mb-2">Issue No. @Model.Id</div><hr />
+        <div class="row">
+            <div class="fw-bold fs-5 col-2">@Model.FlagType!.Name </div>
+            <div class="fw-semibold fs-5 col-10">@Model.FlagType.Description</div>
+        </div>
+    </div>
+    <div class="card mb-5">
+        <div class="card-header">
+            @if (Model.PostType == CodeFlow.core.Models.FlagPostType.Question)
+            {
+                <div class="row justify-content-end">
+                    <div class="col-9 fw-medium fs-5">Reason for Flagging </div>
+                    <a class="col-1" asp-action="Edit" asp-controller="Questions" asp-route-id="@Model.PostId">
+                        <span class="btn btn-primary" type="submit">
+                            Edit
+                        </span>
+                    </a>
+                    <form class="col-2" asp-controller="Questions" asp-action="Delete" method="post" asp-route-questionId="@Model.PostId">
+                        @Html.AntiForgeryToken()
+                        <button class="btn btn-outline-danger" type="submit">
+                            Delete
+                        </button>
+                    </form>
+                </div>
+            }
+            else if(Model.PostType == CodeFlow.core.Models.FlagPostType.Answer)
+            {
+                <div class="row justify-content-end">
+                    <div class="col-9 fw-medium fs-5">Reason for Flagging</div>
+                    <a class="col-1" asp-action="EditAnswer" asp-controller="Questions" asp-route-id="@Model.PostId">
+                        <span class="btn btn-primary" type="submit">
+                            Edit
+                        </span>
+                    </a>
+                    <form class="col-2" asp-controller="Questions" asp-action="DeleteAnswer" method="post" asp-route-answerId="@Model.PostId">
+                        @Html.AntiForgeryToken()
+                        <button class="btn btn-outline-danger" type="submit">
+                            Delete 
+                        </button>
+                    </form>
+                </div>
+            }
+            else
+            {
+                <p>Invalid post</p>
+            }
+        </div>
+        <div class="card-body">@Model.Reason</div>
+        <div class="card-footer fs-6 text-bg-light text-primary">Reported on - @Model.CreatedAt</div>
+    </div>
+    <div class="form-group">
+        <a asp-action="Resolve" asp-controller="Moderation" asp-route-id="@Model.Id" class="btn btn-primary">
+            Resolve
+        </a>
+        <a asp-action="Dashboard" asp-controller="Moderation" class="btn btn-secondary">
+            Cancel
+        </a>
+    </div>
+</div>

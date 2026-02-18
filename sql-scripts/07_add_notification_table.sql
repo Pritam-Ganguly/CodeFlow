@@ -1,0 +1,11 @@
+CREATE TABLE Notifications (
+    Id SERIAL PRIMARY KEY,
+    Type VARCHAR(50) NOT NULL,
+    Message TEXT NOT NULL,
+    UserId INTEGER NOT NULL REFERENCES Users(Id) ON DELETE CASCADE,
+    QuestionId INTEGER REFERENCES Questions(Id) ON DELETE CASCADE,
+    IsRead BOOLEAN NOT NULL DEFAULT FALSE,
+    CreatedAt TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IX_Notifications_UserId ON Notifications(UserId);
+CREATE INDEX IX_Notifications_IsRead ON Notifications(IsRead);

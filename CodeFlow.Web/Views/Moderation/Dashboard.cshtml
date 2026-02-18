@@ -1,0 +1,43 @@
+﻿@model IEnumerable<CodeFlow.core.Models.Flag>
+
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="container">
+    <div class="p-2 mb-2 fw-semibold fs-5">Flagged Posts</div>
+    @if (Model.Any())
+    {
+        <div class="list-group">
+            @foreach (var flag in Model)
+            {
+                <div class="list-group-item list-group-item-action p-4">
+                    <div class="d-flex w-100 justify-content-between mb-3">
+                        <a asp-action="FlagDetails" asp-controller="Moderation" asp-route-id="@flag.Id">
+                            <div>
+                                <span class="fw-semibold">@flag.FlagType!.Name: </span>
+                                <span>@flag.FlagType.Description</span>
+                            </div>
+                        </a>
+                        <div class="badge text-bg-info">@flag.Status</div>
+                    </div>
+                    <p class="mb-2 pb-2">@flag.Reason</p>
+                    <small class="d-flex w-100 justify-content-between">
+                        <small>
+                           Reported At -  @flag.CreatedAt
+                        </small>
+                        <small>
+                           Reported By -  <a asp-action="UserProfile" asp-controller="Profile" asp-route-id="@flag.ReportingUserId">@flag.ReportingUser!.DisplayName</a>
+                        </small>
+                    </small>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="">
+            There's No Pending flags
+        </div>
+    }
+</div>

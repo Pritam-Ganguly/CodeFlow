@@ -1,4 +1,5 @@
 using CodeFlow.core.Models;
+using CodeFlow.core.Models.Services;
 using CodeFlow.core.Repositories;
 using CodeFlow.Web.Models;
 using Microsoft.AspNetCore.Diagnostics;
@@ -10,11 +11,13 @@ namespace CodeFlow.Web.Controllers;
 public class HomeController : Controller
 {
     private readonly IQuestionRepository _questionRepository;
+    private readonly IHotQuestionCacheService _hotQuestionCacheService;
     private readonly ILogger<HomeController> _logger;
 
-    public HomeController(IQuestionRepository questionRepository,ILogger<HomeController> logger)
+    public HomeController(IQuestionRepository questionRepository, IHotQuestionCacheService hotQuestionCacheService, ILogger<HomeController> logger)
     {
         _questionRepository = questionRepository;
+        _hotQuestionCacheService = hotQuestionCacheService;
         _logger = logger;
     }
 
@@ -43,6 +46,7 @@ public class HomeController : Controller
             model.PageNumber = pageNumber;
             model.PageSize = pageSize;
             model.SortType = sortType;
+            model.HotQuestions = await _hotQuestionCacheService.GetHotQuestionsAsync(5);
 
             _logger.LogInformation("Search completed succesfully");
 
@@ -88,5 +92,20 @@ public class HomeController : Controller
         }
 
         return View(errorModel);
+    }
+
+
+    public async Task<IActionResult> GetHotQuestions()
+    {
+        try
+        {
+            var questions = await _hotQuestionCacheService.GetHotQuestionsAsync(5);
+            return PartialView("_HotQuestions", questions);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An exception occured while fetching hot questions");
+            return NotFound();
+        }
     }
 }

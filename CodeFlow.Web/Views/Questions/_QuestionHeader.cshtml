@@ -32,4 +32,15 @@
             </form>
         </div>
     }
+    else
+    {
+        @if (User.Identity!.IsAuthenticated)
+        {
+            <div class="flex-column">
+                <a class="text-decoration-none" asp-controller="Flag" asp-action="Report" asp-route-postType="Question" asp-route-postId="@Model.Id">
+                    <i class="fas fa-flag text-opacity-50" style="color: cadetblue"></i>
+                </a>
+            </div>
+        }
+    }
 </div>

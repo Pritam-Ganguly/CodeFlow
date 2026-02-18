@@ -5,7 +5,6 @@ namespace CodeFlow.core.Repositories
     public interface IQuestionRepository
     {
         Task<Question?> GetByIdAsync(int id);
-        Task<IEnumerable<Question>> GetRecentAsync(int pageNumber = 1, int pageSize = 10, QuestionSortType sortBy = QuestionSortType.Newest);
         Task<int> CreateAsync(Question question);
         Task<Question?> GetByIdWithTagsAsync(int id);
         Task<int> GetAllResult(string searchQuery);

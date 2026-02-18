@@ -1,13 +1,14 @@
 ﻿using CodeFlow.core.Models;
+using CodeFlow.core.Models.Services;
 using CodeFlow.core.Repositories;
 using CodeFlow.core.Repositories.AuthServices;
 using CodeFlow.core.Servies;
 using CodeFlow.Web.Components;
 using CodeFlow.Web.Filters;
+using CodeFlow.Web.Hubs.Services;
 using CodeFlow.Web.Models;
 using FluentValidation.Results;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,6 +24,9 @@ namespace CodeFlow.Web.Controllers
         private readonly ICommentRepository _commentRepository;
         private readonly IAuthServices _authServices;
         private readonly IMarkdownService _markdownService;
+        private readonly IRedisQuestionPopularityService _redisQuestionPopularityService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly INotificationService _notificationService;
         private readonly ILogger<QuestionsController> _logger;
 
         public QuestionsController(
@@ -32,6 +36,9 @@ namespace CodeFlow.Web.Controllers
             ITagRepository tagRepository, ICommentRepository commentRepository,
             IAuthServices authServices,
             IMarkdownService markdownService,
+            IRedisQuestionPopularityService redisQuestionPopularityService,
+            IHttpContextAccessor httpContextAccessor,
+            INotificationService notificationService,
             ILogger<QuestionsController> logger)
         {
             _questionRepository = questionRepository;
@@ -42,12 +49,29 @@ namespace CodeFlow.Web.Controllers
             _logger = logger;
             _markdownService = markdownService;
             _authServices = authServices;
+            _notificationService = notificationService;
+            _redisQuestionPopularityService = redisQuestionPopularityService;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         [AllowAnonymous]
         [LogAction]
         public async Task<IActionResult> Details(int id)
         {
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _redisQuestionPopularityService.RecordViewAsync(id);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to record view for question {QuestionId}", id);
+                }
+            });
+
+
             _logger.LogInformation("Retrieving details for question {QuestionId}", id);
 
             try
@@ -86,7 +110,6 @@ namespace CodeFlow.Web.Controllers
                 };
 
                 _logger.LogInformation("Succesfully fetched details for question id {Id}", id);
-
                 return View(viewModel);
             }
             catch (Exception e)
@@ -203,6 +226,12 @@ namespace CodeFlow.Web.Controllers
                     return Challenge();
                 }
 
+                var question = await _questionRepository.GetByIdAsync(questionId);
+                if (question == null)
+                {
+                    return NotFound();
+                }
+
                 Answer answer = new Answer()
                 {
                     BodyMarkdown = bodyMarkDown.Trim(),
@@ -211,6 +240,17 @@ namespace CodeFlow.Web.Controllers
                 };
 
                 await _answerRepository.CreateAsync(answer);
+                var sentNotification = await _notificationService.Notify(
+                    "info", 
+                    $"{user.UserName} has answered you're question: {question.Title.Trim()[..8]}...", 
+                    question.UserId, 
+                    questionId);
+
+                if (!sentNotification)
+                {
+                    _logger.LogWarning("Unable to send notification to user {userid}", question.UserId);
+                }
+
                 _logger.LogInformation("Successfully added answer for question with id {QuestionId}", questionId);
                 return RedirectToAction(nameof(Details), new { id = questionId });
             }
@@ -229,15 +269,19 @@ namespace CodeFlow.Web.Controllers
             _logger.LogInformation("Opening edit view for question.");
             try
             {
-                var access = await _authServices.CanEditQuestionAsync(id, GetCurrentUser());
-                if (access == null)
+                if (!IsAdmin())
                 {
-                    return NotFound();
+                    var access = await _authServices.CanEditQuestionAsync(id, GetCurrentUserId());
+                    if (access == null)
+                    {
+                        return NotFound();
+                    }
+                    if (access == false)
+                    {
+                        return Forbid();
+                    }
                 }
-                if (access == false)
-                {
-                    return Forbid();
-                }
+
                 var question = await _questionRepository.GetByIdAsync(id);
 
                 if(question == null)
@@ -259,7 +303,6 @@ namespace CodeFlow.Web.Controllers
                 _logger.LogError(ex, "An error occured while opening edit view");
                 return StatusCode(500, "An error occured while opening edit view");
             }
-
         }
 
         [HttpPost]
@@ -271,14 +314,17 @@ namespace CodeFlow.Web.Controllers
 
             try
             {
-                var access = await _authServices.CanEditQuestionAsync(request.Id, GetCurrentUser());
-                if (access == null)
+                if (!IsAdmin())
                 {
-                    return NotFound();
-                }
-                if (access == false)
-                {
-                    return Forbid();
+                    var access = await _authServices.CanEditQuestionAsync(request.Id, GetCurrentUserId());
+                    if (access == null)
+                    {
+                        return NotFound();
+                    }
+                    if (access == false)
+                    {
+                        return Forbid();
+                    }
                 }
                 var question = await _questionRepository.GetByIdAsync(request.Id);
 
@@ -301,6 +347,7 @@ namespace CodeFlow.Web.Controllers
                 }
 
                 var rowsAffected = await _questionRepository.UpdateQuestionAsync(request.Id, request.Title, request.BodyMarkDown);
+
                 if(rowsAffected == 0)
                 {
                     ModelState.AddModelError(string.Empty, "Invalid request");
@@ -327,6 +374,19 @@ namespace CodeFlow.Web.Controllers
 
             try
             {
+                if (!IsAdmin())
+                {
+                    var access = await _authServices.CanEditAnswerAsync(id, GetCurrentUserId());
+                    if (access == null)
+                    {
+                        return NotFound();
+                    }
+                    if (access == false)
+                    {
+                        return Forbid();
+                    }
+                }
+
                 var question = await _answerRepository.GetQuestionByAnswerIdAsync(id);
 
                 if(question == null)
@@ -381,9 +441,23 @@ namespace CodeFlow.Web.Controllers
         public async Task<IActionResult> Delete(int questionId)
         {
             _logger.LogInformation("Started executing delete operation for {QuestionId}", questionId);
+
+            if (!IsAdmin())
+            {
+                var access = await _authServices.CanEditQuestionAsync(questionId, GetCurrentUserId());
+                if (access == null)
+                {
+                    return NotFound();
+                }
+                if (access == false)
+                {
+                    return Forbid();
+                }
+            }
+
             try
             {
-                await _questionRepository.DeleteQuestionAsync(questionId, GetCurrentUser());
+                await _questionRepository.DeleteQuestionAsync(questionId, GetCurrentUserId());
                 _logger.LogInformation("Successfully executed delete operation for question id {QuestionId}", questionId);
                 return RedirectToAction("Index", "Home");
             }
@@ -401,6 +475,19 @@ namespace CodeFlow.Web.Controllers
         public async Task<IActionResult> DeleteAnswer(int answerId)
         {
             _logger.LogInformation("Started executing delete operation for answer id {AnswerId}", answerId);
+
+            if (!IsAdmin())
+            {
+                var access = await _authServices.CanEditAnswerAsync(answerId, GetCurrentUserId());
+                if (access == null)
+                {
+                    return NotFound();
+                }
+                if (access == false)
+                {
+                    return Forbid();
+                }
+            }
 
             try
             {
@@ -532,7 +619,7 @@ namespace CodeFlow.Web.Controllers
                 {
                     Body = body,
                     AnswerId = id,
-                    UserId = GetCurrentUser(),
+                    UserId = GetCurrentUserId(),
                 };
 
                 await _commentRepository.AddCommentAsync(comment);
@@ -579,7 +666,6 @@ namespace CodeFlow.Web.Controllers
                 return StatusCode(500, "An internal error occured");
             }
         }
-
 
         [LogAction]
         [HttpPost]
@@ -652,7 +738,7 @@ namespace CodeFlow.Web.Controllers
         /// voted on the question.</returns>
         private async Task<int> CurrentUserVote(int questionId)
         {
-            int userId = GetCurrentUser();
+            int userId = GetCurrentUserId();
             int? voteType = await _questionRepository.CurrentVoteAsync(userId, questionId);
             return voteType ?? 0;
         }
@@ -664,7 +750,7 @@ namespace CodeFlow.Web.Controllers
         /// <returns>The vote type as an integer. Returns 0 if no vote has been cast by the current user.</returns>
         private async Task<int> CurrentVoteForAnswers(int answerId)
         {
-            int userId = GetCurrentUser();
+            int userId = GetCurrentUserId();
             int? voteType = await _questionRepository.CurrentVoteForAnswerItemAsync(userId, answerId);
             return voteType ?? 0;
         }
@@ -674,13 +760,13 @@ namespace CodeFlow.Web.Controllers
         /// </summary>
         /// <param name="authorId">The ID of the author to compare with the current user's ID.</param>
         /// <returns>returns if the user is the author.</returns>
-        private bool IsAuthor(int authorId) => authorId == GetCurrentUser();
+        private bool IsAuthor(int authorId) => authorId == GetCurrentUserId();
 
         /// <summary>
         /// Retrieves the current user's identifier.
         /// </summary>
         /// <returns>The identifier of the current user as an integer. Returns -1 if the user is not logged in.</returns>
-        private int GetCurrentUser()
+        private int GetCurrentUserId()
         {
             bool isUserLoggedIn = int.TryParse(_userManager.GetUserId(User), out int userId);
             if (!isUserLoggedIn)
@@ -688,6 +774,13 @@ namespace CodeFlow.Web.Controllers
                 userId = -1;
             }
             return userId;
+        }
+
+        private bool IsAdmin()
+        {
+            var currentUser = _httpContextAccessor.HttpContext?.User;
+
+            return User.IsInRole("ADMIN");
         }
     }
 }

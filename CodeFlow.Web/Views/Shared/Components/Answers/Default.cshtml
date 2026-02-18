@@ -43,12 +43,6 @@
                         <a href="#" class="vote-link text-decoration-none" data-type="answer" data-id="@answer.Id" data-vote="1">
                             <i class="fa-solid fa-caret-up fa-2x" style="color:@(answer.CurrentVote == 1 ? "grey" : "lightgrey")"></i>
                         </a>
-                        @if (answer.IsAccepted)
-                        {
-                            <a href="#" class="text-decoration-none" data-type="answer" data-id="@answer.Id" data-vote="-1">
-                                <i class="fas fa-check fa-2x" style="color: forestgreen"></i>
-                            </a>
-                        }
                         <div class="score fs-5 fw-bold my-1 ps-1" id="answer-score-@answer.Id">@answer.Score</div>
                         <a href="#" class="vote-link text-decoration-none" data-type="answer" data-id="@answer.Id" data-vote="-1">
                             <i class="fas fa-caret-down fa-2x" style="color:@(answer.CurrentVote == -1 ? "grey" : "lightgrey")"></i>
@@ -67,6 +61,9 @@
                                 </button>
                             </form>
                         }
+                        <a class="text-decoration-none" asp-controller="Flag" asp-action="Report" asp-route-postType="Answer" asp-route-postId="@answer.Id">
+                            <i class="fas fa-flag text-opacity-50" style="color: cadetblue"></i>
+                        </a>
                     }
                     else
                     {

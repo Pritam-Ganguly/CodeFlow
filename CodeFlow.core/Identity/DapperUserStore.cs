@@ -1,13 +1,18 @@
-﻿using CodeFlow.core.Data;
+﻿using AngleSharp.Css;
+using CodeFlow.core.Data;
 using CodeFlow.core.Models;
 using Dapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Npgsql;
+using System;
+using System.Data;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace CodeFlow.core.Identity
 {
-    public class DapperUserStore : IUserStore<ApplicationUser>, IUserPasswordStore<ApplicationUser>
+    public class DapperUserStore : IUserStore<ApplicationUser>, IUserPasswordStore<ApplicationUser>, IUserRoleStore<ApplicationUser>
     {
         private readonly IDbConnectionFactory _connectionFactory;
         private readonly ILogger<DapperUserStore> _logger;
@@ -132,11 +137,11 @@ namespace CodeFlow.core.Identity
                 });
                 if (user != null)
                 {
-                    _logger.LogDebug("Successfully found user with Id: {UserId}: {UserName}", id, user.UserName);
+                    _logger.LogInformation("Successfully found user with Id: {UserId}: {UserName}", id, user.UserName);
                 }
                 else
                 {
-                    _logger.LogDebug("No user found with Id: {UserId}", id);
+                    _logger.LogInformation("No user found with Id: {UserId}", id);
                 }
                 return user;
             }
@@ -170,11 +175,11 @@ namespace CodeFlow.core.Identity
                 });
                 if (user != null)
                 {
-                    _logger.LogDebug("Successfully found user with name: {UserName}: {UserName}", normalizedUserName, user.UserName);
+                    _logger.LogInformation("Successfully found user with name: {UserName}: {UserName}", normalizedUserName, user.UserName);
                 }
                 else
                 {
-                    _logger.LogDebug("No user found with name: {UserName}", normalizedUserName);
+                    _logger.LogInformation("No user found with name: {UserName}", normalizedUserName);
                 }
                 return user;
             }
@@ -223,8 +228,6 @@ namespace CodeFlow.core.Identity
 
         public Task<IdentityResult> DeleteAsync(ApplicationUser user, CancellationToken cancellationToken) => Task.FromResult(IdentityResult.Success);
 
-        public void Dispose() { }
-
         public static (string ErrorCode, string ErrorMessage) ParseDuplicateKeyError(NpgsqlException exception, ApplicationUser user)
         {
             var message = exception.Message.ToLowerInvariant();
@@ -247,5 +250,203 @@ namespace CodeFlow.core.Identity
             return ("DuplicateUser",
                     "A user with these details already exists. Please try a different display name or email address.");
         }
+
+        /// <summary>
+        /// Adds the specified user to the named role. Ensures role exists and avoids duplicate user-role rows.
+        /// Uses a transaction and Postgres-safe INSERT ... ON CONFLICT pattern to avoid races.
+        /// </summary>
+        public async Task AddToRoleAsync(ApplicationUser user, string roleName, CancellationToken cancellationToken)
+        {
+            if (user == null) throw new ArgumentNullException(nameof(user));
+            if (string.IsNullOrWhiteSpace(roleName)) throw new ArgumentException("roleName cannot be null or whitespace.", nameof(roleName));
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            _logger.LogInformation("Adding user {UserId} to role {RoleName}", user.Id, roleName);
+
+            using var connection = await _connectionFactory.CreateConnectionAsync();
+            IDbTransaction? transaction = null;
+            try
+            {
+                transaction = connection.BeginTransaction();
+
+                // Try fetch existing role id
+                const string sqlFetchRoleId = @"SELECT Id FROM Roles WHERE Name = @RoleName";
+                var roleId = await connection.ExecuteScalarAsync<int?>(sqlFetchRoleId, new { RoleName = roleName }, transaction);
+
+                if (roleId == null)
+                {
+                    // Try insert role - if a concurrent insert happens, ON CONFLICT DO NOTHING prevents error.
+                    const string sqlInsertRoleReturning = @"INSERT INTO Roles (Name) VALUES (@RoleName) ON CONFLICT (Name) DO NOTHING RETURNING Id";
+                    roleId = await connection.ExecuteScalarAsync<int?>(sqlInsertRoleReturning, new { RoleName = roleName }, transaction);
+
+                    if (roleId == null)
+                    {
+                        // Another process likely inserted the role concurrently; re-fetch id.
+                        roleId = await connection.ExecuteScalarAsync<int?>(sqlFetchRoleId, new { RoleName = roleName }, transaction);
+                    }
+                }
+
+                if (roleId == null)
+                {
+                    throw new InvalidOperationException($"Unable to determine role id for role '{roleName}'.");
+                }
+
+                // Avoid duplicate user-role entries
+                const string sqlCheckRelation = @"SELECT COUNT(1) FROM UserRoles WHERE UserId = @UserId AND RoleId = @RoleId";
+                var existing = await connection.ExecuteScalarAsync<int>(sqlCheckRelation, new { UserId = user.Id, RoleId = roleId }, transaction);
+
+                if (existing == 0)
+                {
+                    const string sqlInsertRelation = @"INSERT INTO UserRoles (UserId, RoleId) VALUES (@UserId, @RoleId)";
+                    await connection.ExecuteAsync(sqlInsertRelation, new { UserId = user.Id, RoleId = roleId }, transaction);
+                    _logger.LogInformation("Added user {UserId} to role {RoleName} (RoleId={RoleId})", user.Id, roleName, roleId);
+                }
+                else
+                {
+                    _logger.LogInformation("User {UserId} is already in role {RoleName} (RoleId={RoleId}) - skipping insert", user.Id, roleName, roleId);
+                }
+
+                transaction.Commit();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to add user {UserId} to role {RoleName}", user.Id, roleName);
+                try { transaction?.Rollback(); } catch { /* swallow rollback errors */ }
+                throw;
+            }
+            finally
+            {
+                transaction?.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Checks if the specified user is in the given role.
+        /// Returns true if a matching user-role relation exists.
+        /// </summary>
+        public async Task<bool> IsInRoleAsync(ApplicationUser user, string roleName, CancellationToken cancellationToken)
+        {
+            if (user == null) throw new ArgumentNullException(nameof(user));
+            if (string.IsNullOrWhiteSpace(roleName)) throw new ArgumentException("roleName cannot be null or whitespace.", nameof(roleName));
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            _logger.LogInformation("Checking role membership for user {UserId} in role {RoleName}", user.Id, roleName);
+
+            try
+            {
+                using var connection = await _connectionFactory.CreateConnectionAsync();
+
+                // Use COUNT to avoid type-mapping issues and to keep SQL simple/portable
+                const string sql = @"
+                    SELECT COUNT(1)
+                    FROM UserRoles ur
+                    JOIN Roles r ON ur.RoleId = r.Id
+                    WHERE ur.UserId = @UserId AND r.Name = @RoleName";
+
+                var count = await connection.ExecuteScalarAsync<int>(sql, new { UserId = user.Id, RoleName = roleName });
+                var isInRole = count > 0;
+
+                _logger.LogInformation("IsInRole result for user {UserId} role {RoleName}: {IsInRole}", user.Id, roleName, isInRole);
+                return isInRole;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking role membership for user {UserId} in role {RoleName}", user.Id, roleName);
+                throw;
+            }
+        }
+
+        public Task RemoveFromRoleAsync(ApplicationUser user, string roleName, CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Gets all roles for the specified user.
+        /// </summary>
+        /// <param name="user"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public async Task<IList<string>> GetRolesAsync(ApplicationUser user, CancellationToken cancellationToken)
+        {
+            if (user == null) throw new ArgumentNullException(nameof(user));
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            _logger.LogInformation("Checking all roles for {Name}", user.UserName);
+
+            try
+            {
+                using var connection = await _connectionFactory.CreateConnectionAsync();
+
+                // Use COUNT to avoid type-mapping issues and to keep SQL simple/portable
+                const string sql = @"
+                    SELECT r.Name
+                    FROM UserRoles ur
+                    JOIN Roles r ON ur.RoleId = r.Id
+                    WHERE ur.UserId = @UserId";
+
+                var result = await connection.QueryAsync<string>(sql, new { UserId = user.Id});
+
+                _logger.LogInformation("Found all {count} roles for user", result.Count());
+
+                return result.ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking roles for user {UserId}", user.Id);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Gets all users in the specified role.
+        /// </summary>
+        /// <param name="roleName"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public async Task<IList<ApplicationUser>> GetUsersInRoleAsync(string roleName, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(roleName)) throw new ArgumentException("roleName cannot be null or whitespace.", nameof(roleName));
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            _logger.LogInformation("Checking all users in role {RoleName}", roleName);
+
+            try
+            {
+                using var connection = await _connectionFactory.CreateConnectionAsync();
+
+                // Use COUNT to avoid type-mapping issues and to keep SQL simple/portable
+                const string sql = @"
+                    SELECT u.*
+                    FROM Users u 
+                    LEFT JOIN UserRoles ur ON u.Id = ur.UserId
+                    LEFT JOIN Roles r ON ur.RoleId = r.Id
+                    WHERE UPPER(r.Name) = UPPER(@RoleName)";
+
+                var users = await connection.QueryAsync<ApplicationUser>(sql,
+                    param: new
+                    {
+                        RoleName = roleName,
+                    }
+                 );
+
+                _logger.LogInformation("Fount {Count} user for {RoleName}", users.Count(), roleName);
+                return users.ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking for user in role {RoleName}", roleName);
+                throw;
+            }
+            ;
+        }
+
+        public void Dispose() { }
     }
 }

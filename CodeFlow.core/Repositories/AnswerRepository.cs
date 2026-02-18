@@ -65,14 +65,27 @@ namespace CodeFlow.core.Repositories
             _logger.LogDebug("GetByIdAsync called with Id={AnswerId}", id);
             try
             {
-                var sql = "SELECT * FROM Answers WHERE Id = @Id";
+                var sql = "SELECT a.*, u.* FROM Answers a LEFT JOIN Users u ON u.Id = a.UserId WHERE a.Id = @Id";
                 using var connection = await _connectionFactory.CreateConnectionAsync();
-                var answer = await connection.QueryFirstOrDefaultAsync<Answer>(sql, param: new { Id = id });
+                var answer = await connection.QueryAsync<Answer, User, Answer>(
+                    sql,
+                    map: (answer, user) =>
+                    {
+                        answer.User = user;
+                        return answer;
+                    },
+                    param: new {Id = id},
+                    splitOn: "id,id,id"
+                    );
+
                 if (answer != null)
-                    _logger.LogInformation("GetByIdAsync found AnswerId={AnswerId} (QuestionId={QuestionId}, UserId={UserId})", id, answer.QuestionId, answer.UserId);
-                else
-                    _logger.LogInformation("GetByIdAsync did not find AnswerId={AnswerId}", id);
-                return answer;
+                {
+                    _logger.LogInformation("GetByIdAsync found AnswerId={AnswerId}", id);
+                    return answer.FirstOrDefault();
+                }
+                _logger.LogInformation("GetByIdAsync did not find AnswerId={AnswerId}", id);
+                return null;
+                
             }
             catch (Exception ex)
             {

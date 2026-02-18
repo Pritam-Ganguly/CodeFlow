@@ -3,20 +3,32 @@ using CodeFlow.core.Identity;
 using CodeFlow.core.Models;
 using CodeFlow.core.Repositories.Seed;
 using CodeFlow.Web.Extensions;
+using CodeFlow.Web.Hubs;
+using CodeFlow.Web.Services;
 using Microsoft.AspNetCore.Identity;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddSignalR();
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var redisConnectionString = builder.Configuration.GetConnectionString("Redis");
 
 if (string.IsNullOrEmpty(connectionString))
 {
     connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
 }
 
+builder.Services.AddSingleton<IConnectionMultiplexer>((serviceProvider) =>
+{
+    return ConnectionMultiplexer.Connect(redisConnectionString!);
+});
+
 builder.Services.AddCodeFlowServices();
 builder.Services.AddCustomValidationServices();
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddScoped<IDbConnectionFactory>(serviceProvider =>
 {
@@ -44,10 +56,37 @@ if (!builder.Environment.IsDevelopment())
     builder.Services.AddHsts(options =>
     {
         options.Preload = true;
-        options.IncludeSubDomains = true;
+        options.IncludeSubDomains = true;    
         options.MaxAge = TimeSpan.FromDays(30);
     });
 }
+
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromSeconds(60);
+    options.IOTimeout = TimeSpan.FromSeconds(60);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.MaxAge = TimeSpan.FromDays(30);
+});
+
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("RequireAdminPrivilege", policy => policy.RequireRole("ADMIN"))
+    .AddPolicy("RequireModeratorPrivilege", policy => policy.RequireRole("MODERATOR"));
+
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.Configure<SessionOptions>(options =>
+    {
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    });
+}
+
+builder.Services.AddHostedService<CacheWarmupService>();
+builder.Services.AddHostedService<ImageCleanupService>();
 
 var app = builder.Build();
 
@@ -66,10 +105,13 @@ app.UseStatusCodePagesWithReExecute("/Home/Error", "?statusCode={0}");
 
 using (var scope = app.Services.CreateScope())
 {
-    var badgeDataSeedService = scope.ServiceProvider.GetRequiredService<BadgeDataSeed>();
+    var serviceProvider = scope.ServiceProvider; 
+    var badgeDataSeedService = serviceProvider.GetRequiredService<BadgeDataSeed>();
     await badgeDataSeedService.SeedBadges();
+    await UserDataSeed.Initialize(serviceProvider, "AdminPritam@385");
 }
 
+app.UseSession();
 app.UseHttpsRedirection();
 app.UseRouting();
 
@@ -78,8 +120,11 @@ app.UseAuthorization();
 
 app.MapStaticAssets();
 
+app.MapControllers();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapHub<NotificationHub>("/notification");
 
 app.Run();
