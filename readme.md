@@ -2,8 +2,6 @@ CodeFlow - A stack overflow clone.
 
 ![alt text](image.png)
 
-docker exec -it codeflow_db psql -U codeflow_user -d codeflow
-
 # Roadmap
 
 ### Core Feature Enhancements
