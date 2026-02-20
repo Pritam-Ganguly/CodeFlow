@@ -1,4 +1,4 @@
-FROM mcr.mircosoft.com/dotnet/aspnet:9.0 AS build
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS build
 WORKDIR /src
 
 COPY ["CodeFlow.Web/CodeFlow.Web.csproj", "CodeFlow.Web/"]
