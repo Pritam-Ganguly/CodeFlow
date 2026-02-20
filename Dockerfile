@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS build
 WORKDIR /src
 
 COPY ["CodeFlow.Web/CodeFlow.Web.csproj", "CodeFlow.Web/"]
-COPY ["CodeFlow.Core/CodeFlow.Core.csproj", "CodeFlow.Core/"]
+COPY ["CodeFlow.Core/CodeFlow.core.csproj", "CodeFlow.core/"]
 RUN dotnet restore "CodeFlow.Web/CodeFlow.Web.csproj"
 
 COPY . .
