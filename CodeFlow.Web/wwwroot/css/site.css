@@ -160,6 +160,7 @@ body {
 .so-main-content {
   flex-grow: 1;
   min-width: 0;
+  min-height: 70vh;
   padding: 24px;
   border-left: 1px solid var(--so-light-gray);
   background-color: var(--so-white);

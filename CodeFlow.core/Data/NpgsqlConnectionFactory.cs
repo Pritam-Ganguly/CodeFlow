@@ -31,14 +31,14 @@ namespace CodeFlow.core.Data
         /// <exception cref="Exception">Any exception thrown while opening the connection is logged and rethrown.</exception>
         public async Task<IDbConnection> CreateConnectionAsync()
         {
-            var connectionString = _configuration.GetConnectionString("DefaultConnection");
+            var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL") ?? _configuration["DATABASE_URL"];
 
             if (string.IsNullOrWhiteSpace(connectionString))
             {
                 _logger.LogError("DefaultConnection string is not configured.");
                 throw new InvalidOperationException("DefaultConnection string is not configured.");
             }
-
+ 
             var connection = new NpgsqlConnection(connectionString);
 
             try

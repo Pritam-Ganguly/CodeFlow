@@ -9,10 +9,7 @@ namespace CodeFlow.core.Repositories.Seed
         public static async Task Initialize(IServiceProvider serviceProvider, string testUserPw)
         {
             var adminID = await EnsureUser(serviceProvider, testUserPw, "admin@codeflow.com");
-            await EnsureRole(serviceProvider, adminID, "Admin");
-
-            var managerID = await EnsureUser(serviceProvider, testUserPw, "manager@codeflow.com");
-            await EnsureRole(serviceProvider, managerID, "Moderator");
+            await EnsureRole(serviceProvider, adminID, "ADMIN");
 
         }
 

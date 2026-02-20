@@ -4,7 +4,7 @@ CREATE TABLE FlagTypes (
     Description TEXT NOT NULL,
     SeverityLevel INTEGER NOT NULL DEFAULT 1, -- 1=Low, 2=Medium, 3=High
     CreatedAt TIMESTAMP NOT NULL DEFAULT NOW()
-)
+);
 
 INSERT INTO FlagTypes (Name, Description, SeverityLevel) VALUES
     ('Spam', 'Unsolicited commercial content', 3),
@@ -27,7 +27,7 @@ CREATE TABLE Flags (
     ResolvedByUserId INTEGER REFERENCES Users(Id) ON DELETE SET NULL,
     CreatedAt TIMESTAMP NOT NULL DEFAULT NOW(),
     UpdatedAt TIMESTAMP NOT NULL DEFAULT NOW()
-)
+);
 
 CREATE INDEX IX_Flags_Status ON Flags(Status) WHERE Status = 'Pending';
 CREATE INDEX IX_Flags_Post ON Flags(PostType, PostId);

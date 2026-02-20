@@ -300,8 +300,6 @@ namespace CodeFlow.core.Repositories
 
                 sql += @" LIMIT @PageSize OFFSET @Offset;";
 
-                Console.WriteLine(sql);
-
                 var results = await connection.QueryAsync<Question, User, Question>(
                     sql,
                     map: (question, user) =>

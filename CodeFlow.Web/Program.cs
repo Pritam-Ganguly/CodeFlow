@@ -13,17 +13,25 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-var redisConnectionString = builder.Configuration.GetConnectionString("Redis");
-
-if (string.IsNullOrEmpty(connectionString))
+if (builder.Environment.IsDevelopment())
 {
-    connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
+    builder.Configuration.AddUserSecrets<Program>();
 }
+
+var redisConnectionString = Environment.GetEnvironmentVariable("REDIS_URL")?? builder.Configuration["REDIS_URL"];
+var redisPassword = Environment.GetEnvironmentVariable("REDIS_PASSWORD") ?? builder.Configuration["REDIS_PASSWORD"];
+var adminPassword = Environment.GetEnvironmentVariable("ADMIN_PASSWORD") ?? builder.Configuration["ADMIN_PASSWORD"];
 
 builder.Services.AddSingleton<IConnectionMultiplexer>((serviceProvider) =>
 {
-    return ConnectionMultiplexer.Connect(redisConnectionString!);
+    return ConnectionMultiplexer.Connect(
+            new ConfigurationOptions
+            {
+                EndPoints = { { redisConnectionString!, 19381 } },
+                User = "default",
+                Password = redisPassword
+            }
+        );
 });
 
 builder.Services.AddCodeFlowServices();
@@ -73,8 +81,7 @@ builder.Services.AddSession(options =>
 });
 
 builder.Services.AddAuthorizationBuilder()
-    .AddPolicy("RequireAdminPrivilege", policy => policy.RequireRole("ADMIN"))
-    .AddPolicy("RequireModeratorPrivilege", policy => policy.RequireRole("MODERATOR"));
+    .AddPolicy("RequireAdminPrivilege", policy => policy.RequireRole("ADMIN"));
 
 if (builder.Environment.IsDevelopment())
 {
