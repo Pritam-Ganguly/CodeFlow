@@ -122,50 +122,31 @@
     </div>
 
     <footer class="so-footer">
-        <div class="so-footer-container">
-            <div class="so-footer-logo">
-                <i class="fab fa-stack-overflow fa-2x"></i>
-            </div>
+        <div class="so-footer-container container">
             <div class="so-footer-nav">
                 <div class="so-footer-column">
+                    <div class="so-footer-logo">
+                        <i class="fab fa-stack-overflow fa-2x"></i> 
+                    </div>
                     <div class="so-footer-title">CodeFlow</div>
+                </div>
+                <div class="so-footer-column">
+                    <div class="so-footer-title">Quick Nav</div>
                     <a href="#" class="so-footer-link">Questions</a>
-                    <a href="#" class="so-footer-link">Help</a>
+                    <a href="/Moderation/Dashboard" class="so-footer-link">Dashboard</a>
                 </div>
                 <div class="so-footer-column">
-                    <div class="so-footer-title">Products</div>
-                    <a href="#" class="so-footer-link">Teams</a>
-                    <a href="#" class="so-footer-link">Advertising</a>
-                    <a href="#" class="so-footer-link">Collectives</a>
-                    <a href="#" class="so-footer-link">Talent</a>
-                </div>
-                <div class="so-footer-column">
-                    <div class="so-footer-title">Company</div>
-                    <a href="#" class="so-footer-link">About</a>
-                    <a href="#" class="so-footer-link">Press</a>
-                    <a href="#" class="so-footer-link">Work Here</a>
-                    <a href="#" class="so-footer-link">Legal</a>
-                    <a href="#" class="so-footer-link">Privacy Policy</a>
-                    <a href="#" class="so-footer-link">Terms of Service</a>
-                </div>
-                <div class="so-footer-column">
-                    <div class="so-footer-title">Stack Exchange Network</div>
-                    <a href="#" class="so-footer-link">Technology</a>
-                    <a href="#" class="so-footer-link">Culture & recreation</a>
-                    <a href="#" class="so-footer-link">Life & arts</a>
-                    <a href="#" class="so-footer-link">Science</a>
-                    <a href="#" class="so-footer-link">Professional</a>
-                    <a href="#" class="so-footer-link">Business</a>
+                    <div class="so-footer-title">Created BY, PRITAM GANGULY</div>
+                    <a href="https://www.linkedin.com/in/pritam-ganguly-34730b199/" class="so-footer-link">Linkedin</a>
                 </div>
             </div>
             <div class="so-footer-copyright">
-                &copy; 2025 CodeFlow. All rights reserved.
+                &copy; 2026 CodeFlow. All rights reserved.
             </div>
         </div>
     </footer>
     
     <script>
-
         async function getHotQuestions() {
             var response = await fetch("/Home/GetHotQuestions", {
                        method: 'GET',
