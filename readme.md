@@ -1,8 +1,45 @@
-CodeFlow - A stack overflow clone. 
+## CodeFlow - A stackoverflow like QA form. 
 
-![alt text](image.png)
+URL: [Codeflow](https://codeflow-qnv5.onrender.com/)
 
-# Roadmap
+> Note: Since the application is hosted for free it might take some time to load initially, please wait 1-2 min if that happens.  
+
+#### Screens: 
+
+<img width="1888" height="979" alt="image" src="https://github.com/user-attachments/assets/1a02d86b-8ba5-4744-9155-72c3b65f3a44" />
+
+<img width="1135" height="987" alt="image" src="https://github.com/user-attachments/assets/8ff89ad1-0415-4542-9395-d07e03299500" />
+
+-- 
+#### Introduction: 
+
+I created this project while going through the book "Asp.net Core in Action" by Andrew Lock (highly recommended). I build this project by adhering to all the techniques mentioned in the book. I also further challenged myself by not using 'React' (go to preference) and instead using only 'Razor views' with JavaScript. I also only used 'dapper' instead of 'entity' for the same reason.
+
+#### Summery: 
+
+This application is build by utilizing both asp.net razor views and webapi's. It uses cookie based auth services, implemented using Identity, simple but scalable postgresql database connected using dapper, simple caching system using Redis and Redis cloud, 
+gRPC Realtime notification system using SignalR Core and some custom filers, middleware’s and background services. 
+
+Features: 
+
+1. QA form with markdown preview support and comment system
+2. AJAX responsiveness
+3. Scalable postgresql database 
+4. Redis for caching hot questions
+5. Profile system and user activity tracking
+6. Realtime Notification system 
+7. Flagging system with moderation dashboard
+8. Identity for authentication and authorization
+9. Role based authentication
+10. Resource authorization
+11. Custom background jobs
+12. Custom filters and middleware’s
+13. Extensive logging system and exception handling
+14. Mobile view and dark theme supported
+
+---
+
+# Implementation Roadmap
 
 ### Core Feature Enhancements
 - ✅ **Voting System Completion**
