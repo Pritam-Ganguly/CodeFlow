@@ -1,8 +1,14 @@
 ## CodeFlow - A stackoverflow like QA form. 
+![.NET Core](https://img.shields.io/badge/.NET_Core-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
+![C#](https://img.shields.io/badge/C%23-239120?style=for-the-badge&logo=csharp&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
+![SignalR](https://img.shields.io/badge/SignalR-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
 
 URL: [Codeflow](https://codeflow-qnv5.onrender.com/)
 
 > Note: Since the application is hosted for free it might take some time to load initially, please wait 1-2 min if that happens.  
+
 
 #### Screens: 
 
